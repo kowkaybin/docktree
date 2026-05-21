@@ -214,7 +214,6 @@
     align-items: center;
 }
 
-/* Polite Smaller Action Buttons */
 .dt-tree-action-btn {
     background: transparent;
     border: none;
@@ -258,7 +257,6 @@
     background: #dbeafe !important;
 }
 
-/* Column descriptor styles */
 .dt-col-class-muted {
     font-style: italic;
     color: #94a3b8;
@@ -434,6 +432,18 @@
     to { transform: scale(1); opacity: 1; }
 }
 
+/* Slide Directional Animations for Global Jumps (Smoother and Slower motion) */
+@keyframes dtSlideInLeftAnim {
+    from { transform: translateX(120px); opacity: 0; }
+    to { transform: translateX(0); opacity: 1; }
+}
+@keyframes dtSlideInRightAnim {
+    from { transform: translateX(-120px); opacity: 0; }
+    to { transform: translateX(0); opacity: 1; }
+}
+.dt-anim-slide-left { animation: dtSlideInLeftAnim 0.55s cubic-bezier(0.16, 1, 0.3, 1) !important; }
+.dt-anim-slide-right { animation: dtSlideInRightAnim 0.55s cubic-bezier(0.16, 1, 0.3, 1) !important; }
+
 .dt-modal-header {
     background: #f8fafc;
     padding: 12px 18px;
@@ -453,7 +463,6 @@
 
 .dt-modal-header h3 { margin: 0; font-size: 14px; color: #0f172a; font-weight: 600; white-space: nowrap; }
 
-/* Subtle Inline Editable Label */
 .dt-modal-label-display {
     font-size: 13px;
     color: #475569;
@@ -522,7 +531,22 @@
 
 .dt-modal-footer {
     padding: 12px 18px; border-top: 1px solid #cbd5e1;
-    background: #f8fafc; display: flex; justify-content: flex-end; gap: 8px;
+    background: #f8fafc; display: flex; justify-content: space-between; align-items: center;
+}
+
+.dt-modal-footer-left, .dt-modal-footer-right {
+    display: flex;
+    gap: 8px;
+}
+
+.dt-split-button-container {
+    display: inline-flex;
+    position: relative;
+    vertical-align: middle;
+}
+
+.dt-split-button-container .button {
+    margin: 0 !important;
 }
 
 @media (max-width: 768px) {

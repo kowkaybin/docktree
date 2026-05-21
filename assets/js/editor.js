@@ -24,6 +24,7 @@ jQuery(document).ready(function($) {
     let clipboardNodeHtml = '';
     let contextNodeId = '';
 
+    window.dtModalAnimClass = '';
     const $editorTargetEl = $('#dt-universal-editor-dialog');
 
     // ==========================================
@@ -41,15 +42,18 @@ jQuery(document).ready(function($) {
     function openRowEditor(nodeId, label, classes, style, gutter, attrs) {
         resetAndPrepareDialog();
         $editorTargetEl.rowEditor({
-            onSave: function(base, sub) {
+            onSave: function(base, sub, goToNext, direction) {
                 const $vDom = parseHTMLToVirtualDOM();
-                const $target = $vDom.find(`[data-dt-id="${base.nodeId}"]`);
+                const $target = $vDom.find(`[data-dt-id="${base.nodeId}"]`).first();
                 if ($target.length) {
                     if (base.label) { $target.attr('data-dt-label', base.label); } else { $target.removeAttr('data-dt-label'); }
                     $target.attr('class', ('row ' + sub.gutter + ' ' + base.classes).trim());
                     if (base.style) { $target.attr('style', base.style); } else { $target.removeAttr('style'); }
                     applyCustomAttributes($target, base.attrs);
                     commitWorkspace($vDom);
+                    if (goToNext) {
+                        triggerGlobalEditNext(base.nodeId, 'row', direction || 'next');
+                    }
                 }
             }
         }).rowEditor("open", nodeId, label, classes, style, gutter, attrs);
@@ -58,15 +62,18 @@ jQuery(document).ready(function($) {
     function openColumnEditor(nodeId, label, classes, style, attrs) {
         resetAndPrepareDialog();
         $editorTargetEl.columnEditor({
-            onSave: function(base, sub) {
+            onSave: function(base, sub, goToNext, direction) {
                 const $vDom = parseHTMLToVirtualDOM();
-                const $target = $vDom.find(`[data-dt-id="${base.nodeId}"]`);
+                const $target = $vDom.find(`[data-dt-id="${base.nodeId}"]`).first();
                 if ($target.length) {
                     if (base.label) { $target.attr('data-dt-label', base.label); } else { $target.removeAttr('data-dt-label'); }
                     $target.attr('class', (base.classes || 'col-12').trim());
                     if (base.style) { $target.attr('style', base.style); } else { $target.removeAttr('style'); }
                     applyCustomAttributes($target, base.attrs);
                     commitWorkspace($vDom);
+                    if (goToNext) {
+                        triggerGlobalEditNext(base.nodeId, 'column', direction || 'next');
+                    }
                 }
             }
         }).columnEditor("open", nodeId, label, classes, style, attrs);
@@ -76,9 +83,9 @@ jQuery(document).ready(function($) {
         resetAndPrepareDialog();
         let widgetInstanceName = "widgetEditor";
         let options = {
-            onSave: function(base, sub) {
+            onSave: function(base, sub, goToNext, direction) {
                 const $vDom = parseHTMLToVirtualDOM();
-                const $target = $vDom.find(`[data-dt-id="${base.nodeId}"]`);
+                const $target = $vDom.find(`[data-dt-id="${base.nodeId}"]`).first();
                 if ($target.length) {
                     if (base.label) { $target.attr('data-dt-label', base.label); } else { $target.removeAttr('data-dt-label'); }
                     $target.attr('data-dt-widget', sub.name);
@@ -87,6 +94,10 @@ jQuery(document).ready(function($) {
                     $target.find('.dt-widget-render').html(sub.content);
                     applyCustomAttributes($target, base.attrs);
                     commitWorkspace($vDom);
+
+                    if (goToNext) {
+                        triggerGlobalEditNext(base.nodeId, 'widget', direction || 'next');
+                    }
                 }
             }
         };
@@ -98,6 +109,31 @@ jQuery(document).ready(function($) {
         }
 
         $editorTargetEl[widgetInstanceName](options)[widgetInstanceName]("open", nodeId, label, classes, style, name, content, attrs);
+    }
+
+    // Global Tree Traversal unconstrained by parent layouts
+    function triggerGlobalEditNext(nodeId, type, direction = 'next') {
+        const $allNodes = $(`#dt-tree-root [data-dt-type="${type}"]`);
+        const currentIndex = $allNodes.index($allNodes.filter(`[data-dt-id="${nodeId}"]`));
+        if (currentIndex === -1) return;
+
+        let targetIndex = direction === 'next' ? currentIndex + 1 : currentIndex - 1;
+
+        if (targetIndex >= 0 && targetIndex < $allNodes.length) {
+            const $targetNode = $allNodes.eq(targetIndex);
+            window.dtModalAnimClass = direction === 'next' ? 'dt-anim-slide-left' : 'dt-anim-slide-right';
+
+            setTimeout(function() {
+                if (type === 'row') $targetNode.find('.dt-edit-row-btn').first().trigger('click');
+                else if (type === 'column') $targetNode.find('.dt-edit-col-btn').first().trigger('click');
+                else if (type === 'widget') $targetNode.find('.dt-edit-widget-btn').first().trigger('click');
+            }, 50);
+        } else {
+            const $statusMsg = $('#dt-runtime-status');
+            const originalText = $statusMsg.text();
+            $statusMsg.text(`No ${direction} elements found.`).css({'background': '#2563eb', 'color': '#fff'});
+            setTimeout(() => { $statusMsg.text(originalText).css({'background': '', 'color': ''}); }, 2200);
+        }
     }
 
     function applyCustomAttributes($el, attrString) {
@@ -205,6 +241,22 @@ jQuery(document).ready(function($) {
         updateDocktreePreview();
     });
 
+    $('#dt-widget-search-input').on('input', function() {
+        const query = $(this).val().toLowerCase();
+        $('#dt-widget-options-list li').each(function() {
+            const text = $(this).text().toLowerCase();
+            if (text.indexOf(query) > -1) { $(this).show(); } else { $(this).hide(); }
+        });
+    });
+
+    // Smart filtering so clicking action buttons doesn't globally hide the menu instantly
+    $(document).on('click', function(e) {
+        if (!$(e.target).closest('.dt-tree-action-btn, .dt-dropdown-menu').length) {
+            $contextMenu.hide();
+            $universalAddMenu.hide();
+        }
+    });
+
     // ==========================================
     // NON-DESTRUCTIVE DOM TAGGING AND SYNC PARSER
     // ==========================================
@@ -217,7 +269,6 @@ jQuery(document).ready(function($) {
         nodeCounter = 1;
         const seenIds = new Set();
 
-        // Pass 1: Find maximum node identifier currently registered to protect counter logic
         $bodyNode.find('[data-dt-id]').each(function() {
             const id = $(this).attr('data-dt-id');
             const num = parseInt(id.replace('dt-node-', ''), 10);
@@ -226,7 +277,17 @@ jQuery(document).ready(function($) {
             }
         });
 
-        // Pass 2: Map elements, auto-generate tags, and force re-assignment of colliding IDs (Bug 1 Fix)
+        $bodyNode.find('[data-dt-id]').each(function() {
+            const $el = $(this);
+            let currentId = $el.attr('data-dt-id');
+
+            if (seenIds.has(currentId)) {
+                currentId = 'dt-node-' + (nodeCounter++);
+                $el.attr('data-dt-id', currentId);
+            }
+            seenIds.add(currentId);
+        });
+
         $bodyNode.find('*').each(function() {
             const $el = $(this);
             let type = '';
@@ -241,13 +302,9 @@ jQuery(document).ready(function($) {
 
             if (type) {
                 $el.attr('data-dt-type', type);
-                let currentId = $el.attr('data-dt-id');
-
-                if (!currentId || seenIds.has(currentId)) {
-                    currentId = 'dt-node-' + (nodeCounter++);
-                    $el.attr('data-dt-id', currentId);
+                if (!$el.attr('data-dt-id')) {
+                    $el.attr('data-dt-id', 'dt-node-' + (nodeCounter++));
                 }
-                seenIds.add(currentId);
             }
         });
 
@@ -389,6 +446,16 @@ jQuery(document).ready(function($) {
     }
 
     function bindTreeEvents() {
+        // Double clicking any tree item header will trigger its corresponding property editor
+        $('.dt-tree-item .dt-tree-item-header').off('dblclick').on('dblclick', function(e) {
+            e.preventDefault(); e.stopPropagation();
+            const $item = $(this).closest('.dt-tree-item');
+            const type = $item.attr('data-dt-type');
+            if (type === 'row') $item.find('.dt-edit-row-btn').first().trigger('click');
+            else if (type === 'column') $item.find('.dt-edit-col-btn').first().trigger('click');
+            else if (type === 'widget') $item.find('.dt-edit-widget-btn').first().trigger('click');
+        });
+
         $('.dt-options-btn').off('click').on('click', function(e) {
             e.preventDefault(); e.stopPropagation();
             const $btn = $(this);
@@ -426,7 +493,7 @@ jQuery(document).ready(function($) {
             e.preventDefault(); e.stopPropagation();
             const nodeId = $(this).closest('.dt-tree-item').attr('data-dt-id');
             const $vDom = parseHTMLToVirtualDOM();
-            const $row = $vDom.find(`[data-dt-id="${nodeId}"]`);
+            const $row = $vDom.find(`[data-dt-id="${nodeId}"]`).first();
 
             if ($row.length) {
                 const label = $row.attr('data-dt-label') || '';
@@ -444,7 +511,7 @@ jQuery(document).ready(function($) {
             e.preventDefault(); e.stopPropagation();
             const nodeId = $(this).closest('.dt-tree-item').attr('data-dt-id');
             const $vDom = parseHTMLToVirtualDOM();
-            const $col = $vDom.find(`[data-dt-id="${nodeId}"]`);
+            const $col = $vDom.find(`[data-dt-id="${nodeId}"]`).first();
 
             if ($col.length) {
                 const label = $col.attr('data-dt-label') || '';
@@ -460,7 +527,7 @@ jQuery(document).ready(function($) {
             e.preventDefault(); e.stopPropagation();
             const nodeId = $(this).closest('.dt-tree-item').attr('data-dt-id');
             const $vDom = parseHTMLToVirtualDOM();
-            const $widget = $vDom.find(`[data-dt-id="${nodeId}"]`);
+            const $widget = $vDom.find(`[data-dt-id="${nodeId}"]`).first();
 
             if ($widget.length) {
                 const label = $widget.attr('data-dt-label') || '';
@@ -485,7 +552,7 @@ jQuery(document).ready(function($) {
 
         if (!contextNodeId) return;
         const $vDom = parseHTMLToVirtualDOM();
-        const $targetColumn = $vDom.find(`[data-dt-id="${contextNodeId}"]`);
+        const $targetColumn = $vDom.find(`[data-dt-id="${contextNodeId}"]`).first();
 
         if (!$targetColumn.length) return;
 
@@ -521,7 +588,7 @@ jQuery(document).ready(function($) {
 
         if (!contextNodeId) return;
         const $vDom = parseHTMLToVirtualDOM();
-        const $target = $vDom.find(`[data-dt-id="${contextNodeId}"]`);
+        const $target = $vDom.find(`[data-dt-id="${contextNodeId}"]`).first();
 
         if (!$target.length) return;
 
@@ -598,7 +665,6 @@ jQuery(document).ready(function($) {
                     $domContainer.append($rowDiv);
                     renderLayoutNode($el, $rowDiv.find('.dt-layout-row-contents'));
                 } else if (nodeType === 'column') {
-                    // Bug 2 Fix: Just display "Column" (or custom label) formatted with uppercase first
                     let colClassLabel = nodeLabel || 'Column';
                     colClassLabel = colClassLabel.charAt(0).toUpperCase() + colClassLabel.slice(1);
 
@@ -727,13 +793,12 @@ jQuery(document).ready(function($) {
             }
         });
 
-        // Double-click to open configuration dialogs in LayoutView
         $('#dt-layout-diagram-root').off('dblclick').on('dblclick', '.dt-layout-row, .dt-layout-col, .dt-layout-widget', function(e) {
             e.stopPropagation();
             const nodeId = $(this).attr('data-dt-id');
             const type = $(this).attr('data-dt-type');
             const $vDom = parseHTMLToVirtualDOM();
-            const $target = $vDom.find(`[data-dt-id="${nodeId}"]`);
+            const $target = $vDom.find(`[data-dt-id="${nodeId}"]`).first();
 
             if (!$target.length) return;
 
@@ -798,9 +863,11 @@ jQuery(document).ready(function($) {
             $canvasRoot.html(htmlContent);
             $canvasRoot.css('opacity', '1');
 
-            $(iframeDoc).off('click.contextDismiss').on('click.contextDismiss', function() {
-                $contextMenu.hide();
-                $universalAddMenu.hide();
+            $(iframeDoc).off('click.contextDismiss').on('click.contextDismiss', function(e) {
+                if (!$(e.target).closest('.dt-tree-action-btn, .dt-dropdown-menu').length) {
+                    $contextMenu.hide();
+                    $universalAddMenu.hide();
+                }
             });
 
             $(iframeDoc).find('#docktree-canvas-root .row, #docktree-canvas-root [class*="col-"]').css({
@@ -827,7 +894,7 @@ jQuery(document).ready(function($) {
 
                 if (type === 'widget') {
                     const $vDom = parseHTMLToVirtualDOM();
-                    const $widget = $vDom.find(`[data-dt-id="${nodeId}"]`);
+                    const $widget = $vDom.find(`[data-dt-id="${nodeId}"]`).first();
                     if ($widget.length) {
                         openWidgetEditor(
                             nodeId,
@@ -946,3 +1013,4 @@ jQuery(document).ready(function($) {
         });
     });
 });
+var dmp = console.log;

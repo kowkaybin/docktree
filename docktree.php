@@ -2,7 +2,7 @@
 /**
  * Plugin Name: Docktree
  * Description: Lightweight DOM-first layout engine with side-by-side isolated preview, interactive panel scaling, nestable grids, and interactive widgets.
- * Version: 1.5.0
+ * Version: 1.0.0
  * Author: Kay Bin (vibe Gemini 20260521)
  */
 
