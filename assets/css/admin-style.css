@@ -39,6 +39,7 @@
     background: #e4e6eb;
     padding: 4px 10px;
     border-radius: 12px;
+    transition: all 0.2s ease;
 }
 
 .docktree-split-container {
@@ -49,7 +50,6 @@
     min-height: 550px;
 }
 
-/* Panel Layout Architecture */
 .docktree-panel {
     display: flex;
     flex-direction: column;
@@ -72,15 +72,52 @@
     color: #1e293b;
 }
 
-.panel-subtitle {
+.dt-panel-tabs {
+    display: flex;
+    background: #e2e8f0;
+    padding: 2px;
+    border-radius: 6px;
+    gap: 2px;
+}
+
+.dt-tab-btn {
+    border: none;
+    background: transparent;
+    padding: 4px 10px;
     font-size: 11px;
-    color: #94a3b8;
-    text-transform: uppercase;
-    letter-spacing: 0.05em;
+    font-weight: 600;
+    border-radius: 4px;
+    cursor: pointer;
+    color: #475569;
+    transition: all 0.15s ease;
+}
+
+.dt-tab-btn.active {
+    background: #ffffff;
+    color: #0f172a;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+}
+
+.dt-tab-content-wrapper {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+}
+
+.dt-tab-view {
+    display: none;
+    flex-direction: column;
+    height: 100%;
+    min-height: 0;
+}
+
+.dt-tab-view.active {
+    display: flex;
 }
 
 #dt-left-panel {
-    width: 25%; /* Configured 25% startup layout default state */
+    width: 25%;
     min-width: 15%;
     max-width: 60%;
     background: #ffffff;
@@ -91,7 +128,6 @@
     background: #f1f5f9;
 }
 
-/* Vertical Resize Splitter */
 #docktree-resizer {
     width: 6px;
     background: #cbd5e1;
@@ -115,22 +151,396 @@
     color: #0f172a;
     background: #f8fafc;
 }
-#docktree-shadow-textarea:focus {
-    border-color: #2563eb;
-    box-shadow: 0 0 0 1px #2563eb;
+
+/* ==========================================
+   NESTABLE TREE VIEW STRUCTURE STYLE
+   ========================================== */
+.tree-actions-toolbar {
+    padding-bottom: 8px;
+    border-bottom: 1px solid #f1f5f9;
+    margin-bottom: 8px;
 }
 
-/* Viewport Panel & Zoom Scaling Layout */
-.viewport-header {
+.tree-navigation-container {
+    flex: 1;
+    overflow-y: auto;
+}
+
+.dt-tree-list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    min-height: 15px;
+}
+
+.dt-tree-list .dt-tree-list {
+    padding-left: 12px;
+    border-left: 1px dashed #cbd5e1;
+    margin-left: 8px;
+    margin-top: 4px;
+    min-height: 35px;
+}
+
+.dt-tree-item {
+    background: #ffffff;
+    border: 1px solid #e2e8f0;
+    border-radius: 4px;
+    margin-bottom: 6px;
+    padding: 6px 10px;
+    font-size: 12px;
     display: flex;
+    flex-direction: column;
+    user-select: none;
+}
+
+.dt-tree-item-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.dt-tree-item-title {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-weight: 500;
+    cursor: grab;
+    flex-grow: 1;
+}
+
+.dt-tree-item-actions {
+    display: flex;
+    gap: 4px;
     align-items: center;
 }
 
-.zoom-controls {
+/* Polite Smaller Action Buttons */
+.dt-tree-action-btn {
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    padding: 1px;
+    color: #64748b;
+    border-radius: 3px;
     display: flex;
-    gap: 4px;
+    align-items: center;
+    transition: background 0.15s, color 0.15s;
 }
 
+.dt-tree-action-btn .dashicons {
+    font-size: 14px;
+    width: 14px;
+    height: 14px;
+}
+
+.dt-tree-action-btn:hover {
+    background: #f1f5f9;
+    color: #2563eb;
+}
+
+.dt-tree-action-btn.dt-delete-btn:hover {
+    color: #ef4444;
+}
+
+.dt-tree-row { border-left: 3px solid #2563eb; background: #f8fafc; }
+.dt-tree-column { border-left: 3px solid #10b981; background: #f0fdf4; }
+.dt-tree-widget { border-left: 3px solid #f59e0b; background: #fffbeb; }
+
+.dt-tree-list * {
+    pointer-events: auto;
+}
+.sortable-chosen {
+    background: #f1f5f9 !important;
+}
+.sortable-ghost {
+    opacity: 0.25;
+    border: 2px dashed #2563eb !important;
+    background: #dbeafe !important;
+}
+
+/* Column descriptor styles */
+.dt-col-class-muted {
+    font-style: italic;
+    color: #94a3b8;
+    font-weight: normal;
+    margin-left: 5px;
+    font-size: 11px;
+}
+
+/* ==========================================
+   POPUP DROPDOWN CONTEXT LAYER
+   ========================================== */
+.dt-dropdown-menu {
+    position: absolute;
+    z-index: 100000;
+    background: #ffffff;
+    border: 1px solid #cbd5e1;
+    border-radius: 6px;
+    box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1), 0 4px 6px -2px rgba(0,0,0,0.05);
+    min-width: 160px;
+    padding: 6px 0;
+}
+
+.dt-menu-section-title {
+    font-size: 10px;
+    font-weight: 700;
+    color: #94a3b8;
+    text-transform: uppercase;
+    padding: 4px 12px;
+    letter-spacing: 0.05em;
+}
+
+.dt-menu-search-wrapper {
+    padding: 4px 10px;
+}
+#dt-widget-search-input {
+    width: 100%;
+    font-size: 11px;
+    padding: 4px 6px;
+    border: 1px solid #cbd5e1;
+    border-radius: 4px;
+}
+
+.dt-menu-scroll-list {
+    max-height: 160px;
+    overflow-y: auto;
+}
+
+.dt-dropdown-menu ul { list-style: none; margin: 0; padding: 0; }
+.dt-dropdown-menu li.divider { height: 1px; background: #e2e8f0; margin: 4px 0; }
+
+.dt-context-action, .dt-add-action-item {
+    width: 100%;
+    border: none;
+    background: transparent;
+    padding: 6px 12px;
+    font-size: 12px;
+    text-align: left;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    color: #334155;
+}
+.dt-context-action:hover, .dt-add-action-item:hover {
+    background: #f1f5f9;
+    color: #0f172a;
+}
+.dt-context-action:disabled {
+    opacity: 0.3 !important;
+    cursor: not-allowed !important;
+    background: transparent !important;
+}
+
+/* ==========================================
+   ABSTRACT LAYOUT VIEW STYLE
+   ========================================== */
+.layout-visualizer-info {
+    font-size: 11px;
+    color: #64748b;
+    margin-bottom: 10px;
+    background: #f1f5f9;
+    padding: 6px 10px;
+    border-radius: 4px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.layout-visualizer-container {
+    flex: 1;
+    overflow-y: auto;
+    padding-right: 4px;
+}
+
+.dt-layout-row {
+    background: #f8fafc;
+    border: 1px solid #cbd5e1;
+    border-radius: 6px;
+    padding: 12px;
+    margin-bottom: 14px;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    position: relative;
+}
+
+.dt-layout-row::before {
+    content: "Row Block";
+    font-size: 9px;
+    color: #94a3b8;
+    text-transform: uppercase;
+    position: absolute;
+    top: -6px;
+    left: 8px;
+    background: #ffffff;
+    padding: 0 4px;
+}
+
+.dt-layout-col {
+    background: #ffffff;
+    border: 1px solid #10b981;
+    border-radius: 4px;
+    padding: 10px;
+    min-height: 70px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    flex-grow: 1;
+}
+
+.dt-layout-widget {
+    background: #fffbeb;
+    border: 1px solid #f59e0b;
+    border-radius: 4px;
+    padding: 8px;
+    font-size: 11px;
+    color: #b45309;
+    font-weight: 500;
+    text-align: center;
+    cursor: grab;
+}
+
+.dt-layout-widget:hover, .dt-layout-col:hover, .dt-layout-row:hover {
+    box-shadow: 0 0 0 2px #2563eb;
+}
+
+/* ==========================================
+   SPACIOUS 2-COLUMN POPUP DIALOG FRAMES
+   ========================================== */
+.dt-modal-overlay {
+    position: fixed;
+    top: 0; left: 0; width: 100%; height: 100%;
+    background: rgba(15, 23, 42, 0.45);
+    backdrop-filter: blur(2px);
+    z-index: 100001;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.dt-modal-content {
+    background: #ffffff;
+    border-radius: 8px;
+    box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
+    width: 95%;
+    max-width: 920px;
+    overflow: hidden;
+    animation: dtModalScale 0.15s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes dtModalScale {
+    from { transform: scale(0.95); opacity: 0; }
+    to { transform: scale(1); opacity: 1; }
+}
+
+.dt-modal-header {
+    background: #f8fafc;
+    padding: 12px 18px;
+    border-bottom: 1px solid #cbd5e1;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 15px;
+}
+
+.dt-modal-header-title-area {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-grow: 1;
+}
+
+.dt-modal-header h3 { margin: 0; font-size: 14px; color: #0f172a; font-weight: 600; white-space: nowrap; }
+
+/* Subtle Inline Editable Label */
+.dt-modal-label-display {
+    font-size: 13px;
+    color: #475569;
+    border-bottom: 1px dashed #94a3b8;
+    cursor: pointer;
+    padding: 2px 6px;
+    border-radius: 3px;
+    max-width: 250px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+.dt-modal-label-display:hover {
+    background: #f1f5f9;
+    color: #0f172a;
+}
+.dt-modal-label-input {
+    font-size: 13px;
+    padding: 2px 6px;
+    border: 1px solid #cbd5e1;
+    border-radius: 4px;
+    max-width: 250px;
+}
+
+.dt-modal-body {
+    padding: 0;
+    display: flex;
+    height: 60vh;
+    min-height: 400px;
+    max-height: 700px;
+    overflow: hidden;
+}
+
+.dt-modal-body-left {
+    flex: 2;
+    padding: 24px;
+    overflow-y: auto;
+    height: 100%;
+    box-sizing: border-box;
+}
+
+.dt-modal-body-right {
+    flex: 1;
+    min-width: 290px;
+    max-width: 340px;
+    padding: 24px;
+    background: #f8fafc;
+    border-left: 1px solid #cbd5e1;
+    overflow-y: auto;
+    height: 100%;
+    box-sizing: border-box;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+.dt-form-group { display: flex; flex-direction: column; gap: 6px; }
+.dt-form-group label { font-size: 11px; font-weight: 700; color: #475569; text-transform: uppercase; letter-spacing: 0.05em; }
+
+.dt-form-input, .dt-form-textarea, .dt-form-select {
+    width: 100%; border: 1px solid #cbd5e1; border-radius: 4px;
+    padding: 8px 10px; font-size: 13px; background: #ffffff; color: #0f172a;
+    box-sizing: border-box;
+}
+.dt-form-input:focus, .dt-form-textarea:focus, .dt-form-select:focus { border-color: #2563eb; outline: none; box-shadow: 0 0 0 1px #2563eb; }
+
+.dt-modal-footer {
+    padding: 12px 18px; border-top: 1px solid #cbd5e1;
+    background: #f8fafc; display: flex; justify-content: flex-end; gap: 8px;
+}
+
+@media (max-width: 768px) {
+    .dt-modal-body {
+        flex-direction: column;
+        height: auto;
+        max-height: 70vh;
+        overflow-y: auto;
+    }
+    .dt-modal-body-right {
+        border-left: none;
+        border-top: 1px solid #cbd5e1;
+        max-width: 100%;
+        min-width: 0;
+    }
+}
+
+/* Viewport Controls */
 .dt-zoom-btn.active {
     background: #2563eb !important;
     color: #fff !important;
@@ -147,54 +557,24 @@
 }
 
 .iframe-wrapper {
-    width: 100%;
-    height: 100%;
-    transform-origin: top left;
+    width: 100%; height: 100%; transform-origin: top left;
     transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1), width 0.2s ease, height 0.2s ease;
     background: #ffffff;
 }
 
-#docktree-preview-frame {
-    width: 100%;
-    height: 100%;
-    border: none;
-    display: block;
-}
+#docktree-preview-frame { width: 100%; height: 100%; border: none; display: block; }
 
-/* ==========================================
-   FOCUS MODE (SIDEBAR FULLSCREEN OVERRIDE)
-   ========================================== */
-body.docktree-focus-mode #postbox-container-1 {
-    display: none !important;
-}
-body.docktree-focus-mode #post-body {
-    margin-right: 0 !important;
-}
-body.docktree-focus-mode #post-body-content {
-    width: 100% !important;
-    float: none !important;
-    margin-right: 0 !important;
-}
+/* Focus Mode Settings */
+body.docktree-focus-mode #postbox-container-1 { display: none !important; }
+body.docktree-focus-mode #post-body { margin-right: 0 !important; }
+body.docktree-focus-mode #post-body-content { width: 100% !important; float: none !important; margin-right: 0 !important; }
 body.docktree-focus-mode #docktree-editor-box {
-    position: fixed !important;
-    top: 32px !important; /* WP Admin Bar Header Offset */
-    left: 160px !important; /* WP Left Navigation Menu Offset */
-    right: 0 !important;
-    bottom: 0 !important;
-    z-index: 99990 !important; /* Sits over standard layouts */
-    background: #f0f0f1 !important;
-    margin: 0 !important;
-    height: calc(100vh - 32px) !important;
+    position: fixed !important; top: 32px !important; left: 160px !important; right: 0 !important; bottom: 0 !important;
+    z-index: 99990 !important; background: #f0f0f1 !important; margin: 0 !important; height: calc(100vh - 32px) !important;
 }
-body.docktree-focus-mode .docktree-split-container {
-    height: calc(100vh - 90px) !important;
-}
-/* If menu is folded */
-body.folded.docktree-focus-mode #docktree-editor-box {
-    left: 36px !important;
-}
+body.docktree-focus-mode .docktree-split-container { height: calc(100vh - 90px) !important; }
+body.folded.docktree-focus-mode #docktree-editor-box { left: 36px !important; }
 
-/* Classic Editor Hiding Framework */
 #postdivrich { display: none !important; }
 #docktree-editor-box { border: none !important; background: transparent !important; box-shadow: none !important; }
 #docktree-editor-box .postbox-header { display: none; }

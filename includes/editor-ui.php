@@ -1,4 +1,6 @@
-<?php if (!defined('ABSPATH')) exit; ?>
+<?php
+if (!defined('ABSPATH')) exit;
+?>
 
 <div id="docktree-workspace">
     <!-- Action control layer -->
@@ -8,12 +10,10 @@
                 <span class="dashicons dashicons-update"></span> Refresh Viewport
             </button>
 
-            <!-- Focus Mode Sidebar Toggle -->
             <button type="button" id="dt-sidebar-toggle" class="button">
                 <span class="dashicons dashicons-fullscreen-alt"></span> Toggle Sidebar Focus
             </button>
 
-            <!-- Dynamic Shortcode Processing Option -->
             <label class="dt-toggle-label">
                 <input type="checkbox" id="dt-shortcode-toggle" checked />
                 <span>Execute Shortcodes</span>
@@ -21,9 +21,7 @@
         </div>
 
         <div class="dt-toolbar-right">
-            <span class="dt-status-msg">Docktree Sandbox Active</span>
-
-            <!-- Contextual Save/Preview Lifecycle Control Buttons -->
+            <span class="dt-status-msg" id="dt-runtime-status">Docktree Sandbox Active</span>
             <button type="button" id="dt-save-page-btn" class="button button-primary">
                 <span class="dashicons dashicons-saved"></span> Save Page
             </button>
@@ -39,9 +37,42 @@
         <div class="docktree-panel docktree-editor-pane" id="dt-left-panel">
             <div class="panel-header">
                 <strong>Tree Panel</strong>
-                <span class="panel-subtitle">Raw DOM Editor</span>
+
+                <!-- 3-Mode View Tab Selector -->
+                <div class="dt-panel-tabs">
+                    <button type="button" class="dt-tab-btn" data-tab="html">HTML</button>
+                    <button type="button" class="dt-tab-btn" data-tab="tree">Tree</button>
+                    <button type="button" class="dt-tab-btn" data-tab="layout">Layout</button>
+                </div>
             </div>
-            <textarea name="docktree-shadow-textarea" id="docktree-shadow-textarea" rows="25" placeholder="Type Bootstrap HTML or elements here..."></textarea>
+
+            <!-- Tab View Contents -->
+            <div class="dt-tab-content-wrapper">
+                <!-- Tab 1: HTML Raw View -->
+                <div class="dt-tab-view" id="dt-view-html">
+                    <textarea name="docktree-shadow-textarea" id="docktree-shadow-textarea" rows="25" placeholder="Type Bootstrap HTML or structures here..."></textarea>
+                </div>
+
+                <!-- Tab 2: Nestable Tree View -->
+                <div class="dt-tab-view" id="dt-view-tree">
+                    <div class="tree-actions-toolbar">
+                        <button type="button" class="button button-small" id="dt-tree-add-row">
+                            <span class="dashicons dashicons-plus"></span> Add Row
+                        </button>
+                    </div>
+                    <div class="tree-navigation-container">
+                        <ul id="dt-tree-root" class="dt-tree-list"></ul>
+                    </div>
+                </div>
+
+                <!-- Tab 3: Abstract Layout View -->
+                <div class="dt-tab-view" id="dt-view-layout">
+                    <div class="layout-visualizer-info">
+                        <span class="dashicons dashicons-info"></span> Drag elements to update structure. Click blocks to sync scroll tracking.
+                    </div>
+                    <div class="layout-visualizer-container" id="dt-layout-diagram-root"></div>
+                </div>
+            </div>
         </div>
 
         <!-- Interactive Drag Resizer Bar Splitter -->
@@ -52,7 +83,6 @@
             <div class="panel-header viewport-header">
                 <strong>Viewport</strong>
 
-                <!-- Scaling Responsive Mechanics -->
                 <div class="zoom-controls">
                     <button type="button" class="button button-small dt-zoom-btn active" data-zoom="1">100%</button>
                     <button type="button" class="button button-small dt-zoom-btn" data-zoom="0.75">75%</button>
@@ -69,3 +99,37 @@
         </div>
     </div>
 </div>
+
+<!-- Node Global Options Menu Popup Template -->
+<div id="dt-context-menu" class="dt-dropdown-menu" style="display:none;">
+    <ul>
+        <li><button type="button" class="dt-context-action" data-action="copy"><span class="dashicons dashicons-admin-page"></span> Copy Node</button></li>
+        <li><button type="button" class="dt-context-action" data-action="duplicate"><span class="dashicons dashicons-images-alt2"></span> Duplicate</button></li>
+        <li><button type="button" class="dt-context-action" data-action="paste"><span class="dashicons dashicons-editor-paste"></span> Paste Clipboard</button></li>
+        <li class="divider"></li>
+        <li><button type="button" class="dt-context-action text-danger" data-action="delete"><span class="dashicons dashicons-trash"></span> Delete Element</button></li>
+    </ul>
+</div>
+
+<!-- Universal Adder Column Node Dialog Menu -->
+<div id="dt-universal-add-menu" class="dt-dropdown-menu" style="display:none; min-width: 190px;">
+    <div class="dt-menu-section-title">Add Layout Component</div>
+    <ul>
+        <li><button type="button" class="dt-add-action-item" data-type="row"><span class="dashicons dashicons-menu-alt" style="color:#2563eb;"></span> Nested Grid Row</button></li>
+        <li class="divider"></li>
+    </ul>
+    <div class="dt-menu-section-title">Components Marketplace</div>
+    <div class="dt-menu-search-wrapper">
+        <input type="text" id="dt-widget-search-input" placeholder="Search widget type..." autocomplete="off" />
+    </div>
+    <ul id="dt-widget-options-list" class="dt-menu-scroll-list">
+        <li><button type="button" class="dt-add-action-item" data-type="widget" data-widget="text"><span class="dashicons dashicons-editor-paragraph"></span> Rich Text Block</button></li>
+        <li><button type="button" class="dt-add-action-item" data-type="widget" data-widget="banner"><span class="dashicons dashicons-format-image"></span> Image Banner</button></li>
+        <li><button type="button" class="dt-add-action-item" data-type="widget" data-widget="button"><span class="dashicons dashicons-admin-links"></span> Action Button</button></li>
+        <li><button type="button" class="dt-add-action-item" data-type="widget" data-widget="card"><span class="dashicons dashicons-welcome-widgets-menus"></span> Content Card</button></li>
+        <li><button type="button" class="dt-add-action-item" data-type="widget" data-widget="spacer"><span class="dashicons dashicons-editor-expand"></span> Layout Spacer</button></li>
+    </ul>
+</div>
+
+<!-- Super Modal Master Target Box -->
+<div id="dt-universal-editor-dialog" style="display:none;"></div>
