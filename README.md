@@ -1,61 +1,101 @@
-# **Docktree 🌳**
+# Docktree 🌳
 
-**Docktree** is a ultra-lightweight, DOM-first layout builder engine for WordPress. It completely bypasses complex, brittle JSON/serialized data configurations by treating **raw HTML as the single source of truth**.
+**A lightweight, Bootstrap-native layout builder for WordPress — where your HTML is the database.**
 
-Designed for developers who love clean layout control without the database bloat of conventional page builders.
+No serialized JSON. No database bloat. No lock-in. Just clean Bootstrap markup that you can read, edit, and version-control like any other code.
 
-![](assets/images/preview.gif)
+![Docktree Editor Preview](assets/images/preview.gif)
 
-## **⚡ Key Architectural Features**
+---
 
-* **DOM-First Ideology:** No parallel database models, state files, or serialization mismatch errors. If it's valid HTML, Docktree parses, tags, and manages it elegantly.
-* **Non-Destructive UI Tagging Engine:** Scans standard Bootstrap structures (.row, .col-\*, .dt-widget) on the fly, dynamically applying safe, localized tracking IDs without altering core markup definitions.
-* **SiteOrigin-Inspired Configuration Suite:** A spacious, independently scrollable two-column modal workflow that cleanly separates structural component configurations from granular class alignments and custom inline styles.
-* **Isolated Viewport Sandbox:** Runs layout renders inside a completely isolated theme-wrapped iframe viewport. Refreshes updates seamlessly without breaking the parent editor view.
-* **Asynchronous Save Operations:** Clicking "View Page" automatically commits the background layout code via admin AJAX handlers beforehand, guaranteeing your live views are always up-to-date.
+## Why Docktree?
 
-## **🛠️ Tech Stack & Dependencies**
+Most WordPress page builders store your layout as serialized JSON or base64 blobs in the database. That means vendor lock-in, import/export headaches, and markup you can't read or diff.
 
-Docktree relies strictly on vanilla browser capabilities and rock-solid foundational scripts:
+Docktree takes the opposite approach: **the HTML in the post content field is the layout**. The editor reads it, lets you manipulate it visually, and writes clean Bootstrap HTML back. Nothing else.
 
-* **WordPress Engine:** Core Metadata Boxes, Settings, and Native Admin AJAX Hooks.
-* **DOMParser API:** High-speed, native browser element serialization.
-* **SortableJS:** Fluid, boundary-agnostic drag-and-drop hierarchy control across multi-nested visual levels.
-* **jQuery UI & Inheritance Engine:** Extensible object-oriented widget architecture powering modular property dialog structures.
+| | Docktree | Elementor / Gutenberg |
+|---|---|---|
+| Layout storage | Raw Bootstrap HTML | Serialized JSON / block markup |
+| Database bloat | None | Significant |
+| Bootstrap compatibility | Native | Requires workarounds |
+| Version control friendly | Yes — diff your layouts | No — binary blobs |
+| Plugin dependency | Removable | Content breaks without it |
+| Learning curve | Standard Bootstrap | Proprietary block system |
 
-## **🚀 Quick Start Installation**
+---
 
-1. Download or clone this repository directly into your local WordPress installations directory:
+## What it does
+
+**Split-panel IDE workspace**
+A resizable left panel (tree view, layout diagram, raw HTML) next to a live iframe preview of your page inside the active theme. Zoom to 50%, 75%, or full width.
+
+**Tree view with drag-and-drop**
+Your Bootstrap rows, columns, and widgets appear as a nested tree. Drag to reorder, double-click to edit, right-click for a context menu. Structure changes write back to HTML instantly.
+
+**Multi-select and bulk styling**
+Select multiple nodes with click / Ctrl+Click. A bulk toolbar appears letting you add, remove, or replace CSS class tokens and inline style properties across all selected nodes at once.
+
+**Copy Style dialog**
+Pick exactly which CSS classes and inline styles to copy from one node. Structural classes like `col-md-6` and `row` are pre-unchecked so you never accidentally overwrite layout. Paste additively to any selection.
+
+**Widget component system**
+Typed widgets (Text, Banner, Button, Card, Spacer) with a two-column property editor: left pane for component-specific fields, right pane for CSS classes, inline styles, and custom attributes on any node.
+
+**Non-destructive tagging**
+Docktree adds `data-dt-id` and `data-dt-type` tracking attributes on the fly. They stay out of your way, survive re-parses, and never alter your Bootstrap class structure.
+
+**Async save**
+"View Page" commits your layout via AJAX in the background before opening the frontend — your live preview is always in sync.
+
+---
+
+## Quick Start
+
 ```bash
-   cd wp-content/plugins
-   git clone https://github.com/kowkaybin/docktree.git
+cd wp-content/plugins
+git clone https://github.com/kowkaybin/docktree.git
 ```
-2. Navigate to your WordPress Admin dashboard ![][image1] **Plugins** and click **Activate**.
-3. Create a standard **Page**—Gutenberg is disabled automatically, opening your clean, high-performance Docktree Canvas Workspace instantly.
 
-## **📁 Core Codebase Landscape**
+1. Go to **WordPress Admin → Plugins** and activate **Docktree**
+2. Create or edit any **Page** — Gutenberg is disabled automatically
+3. The Docktree workspace opens in place of the editor
+
+---
+
+## Tech Stack
+
+- **WordPress** — meta boxes, admin AJAX, plugin hooks
+- **Vanilla JS + jQuery + jQuery UI** — no build step, no bundler
+- **SortableJS** — drag-and-drop across nested levels
+- **DOMParser API** — native browser HTML parsing, no dependencies
+- **Bootstrap grid** — `.row` / `.col-*` classes recognized natively
+
+---
+
+## File Structure
+
 ```
 docktree/
-├── docktree.php                 \# Core Bootstrapper, Script Registries & AJAX Routers
+├── docktree.php                  # Plugin bootstrap, AJAX handlers, asset registration
 ├── includes/
-│   └── editor-ui.php            \# Three-Way Split Grid Admin Workspace Structure
+│   └── editor-ui.php             # Editor workspace HTML, bulk toolbar, dialogs
 ├── templates/
-│   └── preview-sandbox.php      \# Isolated Theme-Wrapped Viewport Canvas Environment
+│   └── preview-sandbox.php       # Theme-wrapped iframe canvas
 └── assets/
     ├── css/
-    │   └── admin-style.css      \# Dual-Scroll Modals & Sortable Ghost Layout Skins
+    │   ├── admin-style.css        # Workspace chrome: panels, tree view, toolbar, viewport
+    │   └── widgets.css            # Modal dialogs and widget editor styles
     └── js/
-        ├── widgets.js           \# OOP jQuery UI Component Properties Subclasses
-        └── editor.js            \# Workspace Interaction Hub & ID Collision Guards
+        ├── editor.js              # Core engine: parser, tree, drag-drop, bulk operations
+        └── widgets.js             # jQuery UI widget subclasses for each component type
 ```
 
-## **🗺️ Project Roadmap: Whats Next**
-We are officially leaving Phase 2's core interface structure behind and targeting modular widget expansion. Join us in building out the Components Marketplace within assets/js/widgets.js:
+---
 
-* Rich Text Expansion (widgetEditorText): Transitioning raw markup fields into live TinyMCE rich textual playgrounds.
+## Roadmap
 
-* WP Media Library Core integration (widgetEditorImage): Hooking image selection directly into the default WordPress media modals instead of text input paths.
-
-* Interactive Spacers (widgetEditorSpacer): Building real-time pixel slider metrics.
-
-* Grid Component Wrappers (widgetEditorCard & widgetEditorButton): Standardizing structured markup outputs for Bootstrap component classes.
+- **TinyMCE integration** — rich text editing inside the text widget instead of raw HTML
+- **WordPress Media Library** — pick images from the media modal instead of typing URLs
+- **Spacer slider** — drag a pixel ruler to set spacer height visually
+- **More widget types** — expanding the Components Marketplace in `widgets.js`
