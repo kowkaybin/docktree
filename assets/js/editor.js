@@ -22,6 +22,8 @@ jQuery(document).ready(function($) {
     let activeTab = localStorage.getItem('docktree_active_tab') || 'tree';
     let nodeCounter = 1;
     let clipboardNodeHtml = '';
+    let clipboardStyle = null;
+    let selectedNodes = new Set();
     let contextNodeId = '';
 
     window.dtModalAnimClass = '';
@@ -172,6 +174,59 @@ jQuery(document).ready(function($) {
         $dtTextarea.val($vDom.html()).trigger('change');
         syncTextareaToVisualPanels();
         updateDocktreePreview();
+    }
+
+    function parseStyleString(styleStr) {
+        const obj = {};
+        if (!styleStr) return obj;
+        styleStr.split(';').forEach(function(part) {
+            const colonIdx = part.indexOf(':');
+            if (colonIdx > -1) {
+                const prop = part.slice(0, colonIdx).trim();
+                const val = part.slice(colonIdx + 1).trim();
+                if (prop) obj[prop] = val;
+            }
+        });
+        return obj;
+    }
+
+    function serializeStyleObject(obj) {
+        return Object.entries(obj).filter(function([, v]) { return v; }).map(function([p, v]) { return p + ': ' + v; }).join('; ');
+    }
+
+    function updateBulkToolbar() {
+        const $toolbar = $('#dt-bulk-toolbar');
+        const count = selectedNodes.size;
+        if (count < 2) { $toolbar.hide(); return; }
+
+        const typeCounts = {};
+        selectedNodes.forEach(function(nodeId) {
+            const type = $('#dt-tree-root [data-dt-id="' + nodeId + '"]').attr('data-dt-type');
+            if (type) typeCounts[type] = (typeCounts[type] || 0) + 1;
+        });
+        const parts = Object.entries(typeCounts).map(function(e) { return e[1] + ' ' + e[0]; });
+        $('#dt-bulk-count-badge').text(count + ' selected (' + parts.join(', ') + ')');
+        $('#dt-bulk-paste-style-btn').prop('disabled', !clipboardStyle);
+        $toolbar.show();
+    }
+
+    function applyClipboardStyleToNodes(nodeIds) {
+        if (!clipboardStyle) return;
+        const $vDom = parseHTMLToVirtualDOM();
+        nodeIds.forEach(function(nodeId) {
+            const $el = $vDom.find('[data-dt-id="' + nodeId + '"]').first();
+            if (!$el.length) return;
+            if (clipboardStyle.classes.length) {
+                const existing = ($el.attr('class') || '').split(/\s+/).filter(Boolean);
+                $el.attr('class', Array.from(new Set(existing.concat(clipboardStyle.classes))).join(' '));
+            }
+            if (Object.keys(clipboardStyle.style).length) {
+                const merged = Object.assign({}, parseStyleString($el.attr('style') || ''), clipboardStyle.style);
+                const styleStr = serializeStyleObject(merged);
+                if (styleStr) { $el.attr('style', styleStr); } else { $el.removeAttr('style'); }
+            }
+        });
+        commitWorkspace($vDom);
     }
 
     // ==========================================
@@ -354,7 +409,7 @@ jQuery(document).ready(function($) {
                 }
 
                 const $li = $(`
-                    <li class="dt-tree-item dt-tree-${nodeType}" data-dt-id="${nodeId}" data-dt-type="${nodeType}">
+                    <li class="dt-tree-item dt-tree-${nodeType}${selectedNodes.has(nodeId) ? ' dt-tree-item--selected' : ''}" data-dt-id="${nodeId}" data-dt-type="${nodeType}">
                         <div class="dt-tree-item-header">
                             <span class="dt-tree-item-title">
                                 <span class="dashicons dashicons-${nodeType === 'row' ? 'menu-alt' : nodeType === 'column' ? 'columns' : 'art'}"></span>
@@ -446,6 +501,32 @@ jQuery(document).ready(function($) {
     }
 
     function bindTreeEvents() {
+        // Single click on tree item header toggles selection (Ctrl/Cmd = multi-add)
+        $('.dt-tree-item .dt-tree-item-header').off('click.select').on('click.select', function(e) {
+            if ($(e.target).closest('.dt-tree-item-actions').length) return;
+            const $item = $(this).closest('.dt-tree-item');
+            const nodeId = $item.attr('data-dt-id');
+
+            if (e.ctrlKey || e.metaKey) {
+                if (selectedNodes.has(nodeId)) {
+                    selectedNodes.delete(nodeId);
+                    $item.removeClass('dt-tree-item--selected');
+                } else {
+                    selectedNodes.add(nodeId);
+                    $item.addClass('dt-tree-item--selected');
+                }
+            } else {
+                const wasSelected = selectedNodes.has(nodeId);
+                selectedNodes.clear();
+                $('.dt-tree-item').removeClass('dt-tree-item--selected');
+                if (!wasSelected) {
+                    selectedNodes.add(nodeId);
+                    $item.addClass('dt-tree-item--selected');
+                }
+            }
+            updateBulkToolbar();
+        });
+
         // Double clicking any tree item header will trigger its corresponding property editor
         $('.dt-tree-item .dt-tree-item-header').off('dblclick').on('dblclick', function(e) {
             e.preventDefault(); e.stopPropagation();
@@ -464,6 +545,9 @@ jQuery(document).ready(function($) {
 
             const $pasteBtn = $contextMenu.find('[data-action="paste"]');
             if (clipboardNodeHtml) { $pasteBtn.removeAttr('disabled'); } else { $pasteBtn.attr('disabled', 'disabled'); }
+
+            const $pasteStyleBtn = $contextMenu.find('[data-action="paste-style"]');
+            if (clipboardStyle) { $pasteStyleBtn.removeAttr('disabled'); } else { $pasteStyleBtn.attr('disabled', 'disabled'); }
 
             $contextMenu.css({ top: (offset.top + $btn.outerHeight()) + 'px', left: (offset.left - 120) + 'px' }).show();
         });
@@ -635,7 +719,189 @@ jQuery(document).ready(function($) {
                 $target.remove();
                 commitWorkspace($vDom);
                 break;
+            case 'copy-style':
+                openCopyStyleDialog(contextNodeId);
+                break;
+            case 'paste-style':
+                if (clipboardStyle) { applyClipboardStyleToNodes([contextNodeId]); }
+                break;
         }
+    });
+
+    // ==========================================
+    // BULK STYLING TOOLBAR HANDLERS
+    // ==========================================
+    $('#dt-bulk-clear-btn').on('click', function() {
+        selectedNodes.clear();
+        $('.dt-tree-item').removeClass('dt-tree-item--selected');
+        updateBulkToolbar();
+    });
+
+    $('#dt-bulk-add-class-btn').on('click', function() {
+        const tokensToAdd = $('#dt-bulk-add-class-input').val().trim().split(/\s+/).filter(Boolean);
+        if (!tokensToAdd.length || !selectedNodes.size) return;
+        const $vDom = parseHTMLToVirtualDOM();
+        selectedNodes.forEach(function(nodeId) {
+            const $el = $vDom.find('[data-dt-id="' + nodeId + '"]').first();
+            if (!$el.length) return;
+            const existing = ($el.attr('class') || '').split(/\s+/).filter(Boolean);
+            $el.attr('class', Array.from(new Set(existing.concat(tokensToAdd))).join(' '));
+        });
+        commitWorkspace($vDom);
+        $('#dt-bulk-add-class-input').val('');
+    });
+
+    $('#dt-bulk-remove-class-btn').on('click', function() {
+        const tokensToRemove = new Set($('#dt-bulk-remove-class-input').val().trim().split(/\s+/).filter(Boolean));
+        if (!tokensToRemove.size || !selectedNodes.size) return;
+        const $vDom = parseHTMLToVirtualDOM();
+        selectedNodes.forEach(function(nodeId) {
+            const $el = $vDom.find('[data-dt-id="' + nodeId + '"]').first();
+            if (!$el.length) return;
+            const existing = ($el.attr('class') || '').split(/\s+/).filter(Boolean);
+            $el.attr('class', existing.filter(function(c) { return !tokensToRemove.has(c); }).join(' '));
+        });
+        commitWorkspace($vDom);
+        $('#dt-bulk-remove-class-input').val('');
+    });
+
+    $('#dt-bulk-replace-class-btn').on('click', function() {
+        const fromToken = $('#dt-bulk-replace-from-input').val().trim();
+        const toToken = $('#dt-bulk-replace-to-input').val().trim();
+        if (!fromToken || !selectedNodes.size) return;
+        const $vDom = parseHTMLToVirtualDOM();
+        selectedNodes.forEach(function(nodeId) {
+            const $el = $vDom.find('[data-dt-id="' + nodeId + '"]').first();
+            if (!$el.length) return;
+            const existing = ($el.attr('class') || '').split(/\s+/).filter(Boolean);
+            const updated = existing.map(function(c) { return c === fromToken ? toToken : c; }).filter(Boolean);
+            $el.attr('class', Array.from(new Set(updated)).join(' '));
+        });
+        commitWorkspace($vDom);
+        $('#dt-bulk-replace-from-input').val('');
+        $('#dt-bulk-replace-to-input').val('');
+    });
+
+    $('#dt-bulk-set-style-btn').on('click', function() {
+        const prop = $('#dt-bulk-style-prop-input').val().trim();
+        const val = $('#dt-bulk-style-val-input').val().trim();
+        if (!prop || !selectedNodes.size) return;
+        const $vDom = parseHTMLToVirtualDOM();
+        selectedNodes.forEach(function(nodeId) {
+            const $el = $vDom.find('[data-dt-id="' + nodeId + '"]').first();
+            if (!$el.length) return;
+            const styleObj = parseStyleString($el.attr('style') || '');
+            if (val) { styleObj[prop] = val; } else { delete styleObj[prop]; }
+            const styleStr = serializeStyleObject(styleObj);
+            if (styleStr) { $el.attr('style', styleStr); } else { $el.removeAttr('style'); }
+        });
+        commitWorkspace($vDom);
+        $('#dt-bulk-style-prop-input').val('');
+        $('#dt-bulk-style-val-input').val('');
+    });
+
+    $('#dt-bulk-copy-style-btn').on('click', function() {
+        const firstId = selectedNodes.size ? Array.from(selectedNodes)[0] : null;
+        if (!firstId) return;
+        openCopyStyleDialog(firstId);
+    });
+
+    $('#dt-bulk-paste-style-btn').on('click', function() {
+        if (!clipboardStyle || !selectedNodes.size) return;
+        applyClipboardStyleToNodes(Array.from(selectedNodes));
+    });
+
+    // ==========================================
+    // COPY STYLE DIALOG
+    // ==========================================
+    const STRUCTURAL_CLASS_RE = [/^col(-|$)/, /^row$/, /^container(-|$)/, /^dt-/, /^g[xy]?-/];
+    const STRUCTURAL_STYLE_PROPS = new Set(['display', 'position', 'width', 'height', 'float', 'clear',
+        'flex', 'flex-direction', 'flex-wrap', 'flex-grow', 'flex-shrink', 'flex-basis',
+        'grid', 'grid-template', 'grid-template-columns', 'grid-template-rows',
+        'overflow', 'box-sizing']);
+
+    function isStructuralClass(cls) {
+        return STRUCTURAL_CLASS_RE.some(function(re) { return re.test(cls); });
+    }
+
+    function openCopyStyleDialog(nodeId) {
+        const $vDom = parseHTMLToVirtualDOM();
+        const $el = $vDom.find('[data-dt-id="' + nodeId + '"]').first();
+        if (!$el.length) return;
+
+        const label = $el.attr('data-dt-label') || ($el.attr('data-dt-type') || 'Node');
+        const classes = ($el.attr('class') || '').split(/\s+/).filter(Boolean);
+        const styleObj = parseStyleString($el.attr('style') || '');
+
+        $('#dt-csd-node-label').text(label);
+
+        const $classesList = $('#dt-csd-classes-list').empty();
+        if (classes.length) {
+            classes.forEach(function(cls) {
+                const structural = isStructuralClass(cls);
+                $classesList.append(
+                    '<label class="dt-csd-check-item' + (structural ? ' dt-csd-structural' : '') + '">' +
+                    '<input type="checkbox" value="' + cls + '"' + (structural ? '' : ' checked') + '/>' +
+                    '<code>' + cls + '</code>' +
+                    (structural ? '<span class="dt-csd-tag">structural</span>' : '') +
+                    '</label>'
+                );
+            });
+        } else {
+            $classesList.append('<span class="dt-csd-empty">No classes</span>');
+        }
+
+        const $stylesList = $('#dt-csd-styles-list').empty();
+        const styleEntries = Object.entries(styleObj);
+        if (styleEntries.length) {
+            styleEntries.forEach(function(entry) {
+                const prop = entry[0], val = entry[1];
+                const structural = STRUCTURAL_STYLE_PROPS.has(prop);
+                $stylesList.append(
+                    '<label class="dt-csd-check-item' + (structural ? ' dt-csd-structural' : '') + '">' +
+                    '<input type="checkbox" value="' + prop + '"' + (structural ? '' : ' checked') + '/>' +
+                    '<code>' + prop + ': ' + val + '</code>' +
+                    (structural ? '<span class="dt-csd-tag">structural</span>' : '') +
+                    '</label>'
+                );
+            });
+        } else {
+            $stylesList.append('<span class="dt-csd-empty">No inline styles</span>');
+        }
+
+        $('#dt-csd-toggle-all-classes').prop('checked', true);
+        $('#dt-csd-toggle-all-styles').prop('checked', true);
+        $('#dt-copy-style-dialog').data('source-style-obj', styleObj).css('display', 'flex');
+    }
+
+    $('#dt-csd-toggle-all-classes').on('change', function() {
+        $('#dt-csd-classes-list input[type="checkbox"]').prop('checked', $(this).is(':checked'));
+    });
+
+    $('#dt-csd-toggle-all-styles').on('change', function() {
+        $('#dt-csd-styles-list input[type="checkbox"]').prop('checked', $(this).is(':checked'));
+    });
+
+    $('#dt-csd-cancel-btn, #dt-csd-cancel2-btn').on('click', function() {
+        $('#dt-copy-style-dialog').hide();
+    });
+
+    $('#dt-csd-confirm-btn').on('click', function() {
+        const checkedClasses = [];
+        $('#dt-csd-classes-list input[type="checkbox"]:checked').each(function() {
+            checkedClasses.push($(this).val());
+        });
+        const sourceStyleObj = $('#dt-copy-style-dialog').data('source-style-obj') || {};
+        const checkedStyle = {};
+        $('#dt-csd-styles-list input[type="checkbox"]:checked').each(function() {
+            const prop = $(this).val();
+            if (sourceStyleObj[prop]) checkedStyle[prop] = sourceStyleObj[prop];
+        });
+
+        clipboardStyle = { classes: checkedClasses, style: checkedStyle };
+        $('#dt-bulk-paste-style-btn').prop('disabled', false);
+        $contextMenu.find('[data-action="paste-style"]').removeAttr('disabled');
+        $('#dt-copy-style-dialog').hide();
     });
 
     // ==========================================

@@ -60,6 +60,45 @@ if (!defined('ABSPATH')) exit;
                             <span class="dashicons dashicons-plus"></span> Add Row
                         </button>
                     </div>
+
+                    <!-- Bulk Styling Toolbar (shown when ≥2 nodes selected) -->
+                    <div id="dt-bulk-toolbar" style="display:none;">
+                        <div class="dt-bulk-header">
+                            <span id="dt-bulk-count-badge" class="dt-bulk-badge">0 selected</span>
+                            <button type="button" id="dt-bulk-clear-btn" class="dt-tree-action-btn" title="Clear Selection">
+                                <span class="dashicons dashicons-no-alt"></span>
+                            </button>
+                        </div>
+                        <div class="dt-bulk-row">
+                            <input type="text" id="dt-bulk-add-class-input" class="dt-bulk-input" placeholder="Add class(es)..." />
+                            <button type="button" id="dt-bulk-add-class-btn" class="button button-small dt-bulk-btn" title="Add classes to selected">+</button>
+                        </div>
+                        <div class="dt-bulk-row">
+                            <input type="text" id="dt-bulk-remove-class-input" class="dt-bulk-input" placeholder="Remove class(es)..." />
+                            <button type="button" id="dt-bulk-remove-class-btn" class="button button-small dt-bulk-btn" title="Remove classes from selected">−</button>
+                        </div>
+                        <div class="dt-bulk-row">
+                            <input type="text" id="dt-bulk-replace-from-input" class="dt-bulk-input" placeholder="From class..." />
+                            <span class="dt-bulk-arrow">→</span>
+                            <input type="text" id="dt-bulk-replace-to-input" class="dt-bulk-input" placeholder="To class..." />
+                            <button type="button" id="dt-bulk-replace-class-btn" class="button button-small dt-bulk-btn" title="Replace class token">⇄</button>
+                        </div>
+                        <div class="dt-bulk-row">
+                            <input type="text" id="dt-bulk-style-prop-input" class="dt-bulk-input dt-bulk-prop" placeholder="CSS prop" />
+                            <span class="dt-bulk-colon">:</span>
+                            <input type="text" id="dt-bulk-style-val-input" class="dt-bulk-input dt-bulk-val" placeholder="value" />
+                            <button type="button" id="dt-bulk-set-style-btn" class="button button-small dt-bulk-btn" title="Apply inline style">Set</button>
+                        </div>
+                        <div class="dt-bulk-row dt-bulk-style-row">
+                            <button type="button" id="dt-bulk-copy-style-btn" class="button button-small">
+                                <span class="dashicons dashicons-admin-appearance"></span> Copy Style
+                            </button>
+                            <button type="button" id="dt-bulk-paste-style-btn" class="button button-small" disabled>
+                                <span class="dashicons dashicons-editor-paste"></span> Paste Style
+                            </button>
+                        </div>
+                    </div>
+
                     <div class="tree-navigation-container">
                         <ul id="dt-tree-root" class="dt-tree-list"></ul>
                     </div>
@@ -104,6 +143,8 @@ if (!defined('ABSPATH')) exit;
 <div id="dt-context-menu" class="dt-dropdown-menu" style="display:none;">
     <ul>
         <li><button type="button" class="dt-context-action" data-action="copy"><span class="dashicons dashicons-admin-page"></span> Copy Node</button></li>
+        <li><button type="button" class="dt-context-action" data-action="copy-style"><span class="dashicons dashicons-admin-appearance"></span> Copy Style</button></li>
+        <li><button type="button" class="dt-context-action" data-action="paste-style" disabled><span class="dashicons dashicons-editor-paste"></span> Paste Style</button></li>
         <li><button type="button" class="dt-context-action" data-action="duplicate"><span class="dashicons dashicons-images-alt2"></span> Duplicate</button></li>
         <li><button type="button" class="dt-context-action" data-action="paste"><span class="dashicons dashicons-editor-paste"></span> Paste Clipboard</button></li>
         <li class="divider"></li>
@@ -133,3 +174,35 @@ if (!defined('ABSPATH')) exit;
 
 <!-- Super Modal Master Target Box -->
 <div id="dt-universal-editor-dialog" style="display:none;"></div>
+
+<!-- Copy Style Picker Dialog -->
+<div id="dt-copy-style-dialog" class="dt-modal-overlay" style="display:none;">
+    <div class="dt-copy-style-modal">
+        <div class="dt-csd-header">
+            <h3>Copy Style from &ldquo;<span id="dt-csd-node-label">Node</span>&rdquo;</h3>
+            <button type="button" id="dt-csd-cancel-btn" class="dt-tree-action-btn" title="Cancel">
+                <span class="dashicons dashicons-no-alt"></span>
+            </button>
+        </div>
+        <div class="dt-csd-body">
+            <div class="dt-csd-col">
+                <div class="dt-csd-col-header">
+                    <strong>CSS Classes</strong>
+                    <label><input type="checkbox" id="dt-csd-toggle-all-classes" checked /> All</label>
+                </div>
+                <div id="dt-csd-classes-list" class="dt-csd-checklist"></div>
+            </div>
+            <div class="dt-csd-col">
+                <div class="dt-csd-col-header">
+                    <strong>Inline Styles</strong>
+                    <label><input type="checkbox" id="dt-csd-toggle-all-styles" checked /> All</label>
+                </div>
+                <div id="dt-csd-styles-list" class="dt-csd-checklist"></div>
+            </div>
+        </div>
+        <div class="dt-csd-footer">
+            <button type="button" id="dt-csd-cancel2-btn" class="button">Cancel</button>
+            <button type="button" id="dt-csd-confirm-btn" class="button button-primary">Copy Selected</button>
+        </div>
+    </div>
+</div>

@@ -603,3 +603,238 @@ body.folded.docktree-focus-mode #docktree-editor-box { left: 36px !important; }
 #docktree-editor-box { border: none !important; background: transparent !important; box-shadow: none !important; }
 #docktree-editor-box .postbox-header { display: none; }
 #docktree-editor-box .inside { padding: 0 !important; margin: 0 !important; }
+
+/* ==========================================
+   MULTI-SELECT — TREE ITEM SELECTED STATE
+   ========================================== */
+.dt-tree-item--selected {
+    box-shadow: 0 0 0 2px #2563eb !important;
+}
+.dt-tree-item--selected.dt-tree-row { background: #dbeafe !important; }
+.dt-tree-item--selected.dt-tree-column { background: #d1fae5 !important; box-shadow: 0 0 0 2px #2563eb !important; }
+.dt-tree-item--selected.dt-tree-widget { background: #fef3c7 !important; box-shadow: 0 0 0 2px #2563eb !important; }
+
+/* ==========================================
+   BULK STYLING TOOLBAR
+   ========================================== */
+#dt-bulk-toolbar {
+    background: #eff6ff;
+    border: 1px solid #93c5fd;
+    border-radius: 6px;
+    padding: 8px 10px;
+    margin-bottom: 8px;
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+    flex-shrink: 0;
+}
+
+.dt-bulk-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 2px;
+}
+
+.dt-bulk-badge {
+    font-size: 11px;
+    font-weight: 700;
+    color: #1d4ed8;
+    background: #dbeafe;
+    padding: 2px 8px;
+    border-radius: 10px;
+}
+
+.dt-bulk-row {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.dt-bulk-input {
+    flex: 1;
+    min-width: 0;
+    border: 1px solid #bfdbfe;
+    border-radius: 3px;
+    padding: 3px 6px;
+    font-size: 11px;
+    background: #fff;
+    color: #1e293b;
+}
+.dt-bulk-input:focus { border-color: #2563eb; outline: none; }
+
+.dt-bulk-prop { flex: 1; }
+.dt-bulk-val { flex: 2; }
+
+.dt-bulk-arrow, .dt-bulk-colon {
+    color: #94a3b8;
+    font-size: 11px;
+    padding: 0 1px;
+    flex-shrink: 0;
+}
+
+.dt-bulk-btn {
+    flex-shrink: 0;
+    padding: 2px 7px !important;
+    font-size: 12px !important;
+    min-height: 24px !important;
+    line-height: 1 !important;
+}
+
+.dt-bulk-style-row {
+    gap: 6px;
+    margin-top: 2px;
+}
+.dt-bulk-style-row .button {
+    flex: 1;
+    text-align: center;
+    font-size: 11px !important;
+    padding: 3px 6px !important;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 4px;
+}
+.dt-bulk-style-row .button .dashicons {
+    font-size: 13px;
+    width: 13px;
+    height: 13px;
+}
+
+/* ==========================================
+   COPY STYLE DIALOG
+   ========================================== */
+.dt-copy-style-modal {
+    background: #ffffff;
+    border-radius: 8px;
+    box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.15), 0 8px 10px -6px rgba(0, 0, 0, 0.1);
+    width: 90%;
+    max-width: 560px;
+    animation: dtModalScale 0.15s cubic-bezier(0.16, 1, 0.3, 1);
+    overflow: hidden;
+}
+
+.dt-csd-header {
+    background: #f8fafc;
+    padding: 12px 18px;
+    border-bottom: 1px solid #cbd5e1;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 10px;
+}
+
+.dt-csd-header h3 {
+    margin: 0;
+    font-size: 14px;
+    color: #0f172a;
+    font-weight: 600;
+}
+
+.dt-csd-body {
+    display: flex;
+    min-height: 160px;
+    max-height: 55vh;
+    overflow: hidden;
+}
+
+.dt-csd-col {
+    flex: 1;
+    padding: 14px 16px;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+.dt-csd-col:first-child {
+    border-right: 1px solid #e2e8f0;
+}
+
+.dt-csd-col-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding-bottom: 8px;
+    border-bottom: 1px solid #f1f5f9;
+    margin-bottom: 6px;
+}
+
+.dt-csd-col-header strong {
+    font-size: 11px;
+    color: #475569;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    font-weight: 700;
+}
+
+.dt-csd-col-header label {
+    font-size: 11px;
+    color: #64748b;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    cursor: pointer;
+    user-select: none;
+}
+
+.dt-csd-checklist {
+    display: flex;
+    flex-direction: column;
+    gap: 1px;
+}
+
+.dt-csd-check-item {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 4px 6px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 12px;
+    user-select: none;
+}
+
+.dt-csd-check-item:hover {
+    background: #f1f5f9;
+}
+
+.dt-csd-check-item code {
+    font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+    font-size: 11px;
+    color: #0f172a;
+    flex: 1;
+    word-break: break-all;
+}
+
+.dt-csd-structural code {
+    color: #94a3b8;
+}
+
+.dt-csd-tag {
+    font-size: 9px;
+    background: #e2e8f0;
+    color: #64748b;
+    padding: 1px 5px;
+    border-radius: 3px;
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+    white-space: nowrap;
+    flex-shrink: 0;
+}
+
+.dt-csd-empty {
+    font-size: 11px;
+    color: #94a3b8;
+    font-style: italic;
+    padding: 8px 0;
+}
+
+.dt-csd-footer {
+    padding: 12px 18px;
+    border-top: 1px solid #cbd5e1;
+    background: #f8fafc;
+    display: flex;
+    justify-content: flex-end;
+    gap: 8px;
+}
