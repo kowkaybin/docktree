@@ -26,6 +26,7 @@ function docktree_admin_assets($hook) {
         wp_enqueue_script('docktree-widgets-js', DOCKTREE_URL . 'assets/js/widgets.js', array('jquery', 'jquery-ui-widget'), '1.5.0', true);
 
         wp_enqueue_style('docktree-admin-css', DOCKTREE_URL . 'assets/css/admin-style.css', array(), '1.5.0');
+        wp_enqueue_style('docktree-widgets-css', DOCKTREE_URL . 'assets/css/widgets.css', array('docktree-admin-css'), '1.5.0');
         wp_enqueue_script('docktree-admin-js', DOCKTREE_URL . 'assets/js/editor.js', array('jquery', 'sortable-js', 'docktree-widgets-js'), '1.5.0', true);
 
         wp_localize_script('docktree-admin-js', 'docktreeData', array(
