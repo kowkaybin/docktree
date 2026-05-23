@@ -38,6 +38,7 @@ jQuery(document).ready(function($) {
         if ($editorTargetEl.data("docktree-widgetEditor")) { $editorTargetEl.widgetEditor("destroy"); }
         if ($editorTargetEl.data("docktree-widgetEditorText")) { $editorTargetEl.widgetEditorText("destroy"); }
         if ($editorTargetEl.data("docktree-widgetEditorImage")) { $editorTargetEl.widgetEditorImage("destroy"); }
+		if ($editorTargetEl.data("docktree-widgetEditorTemplateProcessor")) { $editorTargetEl.widgetEditorTemplateProcessor("destroy"); }
         $editorTargetEl.empty().removeClass().attr('style', 'display:none;');
     }
 
@@ -113,6 +114,47 @@ jQuery(document).ready(function($) {
         $editorTargetEl[widgetInstanceName](options)[widgetInstanceName]("open", nodeId, label, classes, style, name, content, attrs);
     }
 
+	function openWidgetEditorTemplate(nodeId, type, label, classes, style, name, content, attrs) {
+        resetAndPrepareDialog();
+        // Shift entirely to meta-template processor pipeline implementation
+        $editorTargetEl.widgetEditorTemplateProcessor({
+            onSaveOld: function(base, sub, goToNext, direction) {
+                const $vDom = parseHTMLToVirtualDOM();
+                const $target = $vDom.find(`[data-dt-id="${base.nodeId}"]`).first();
+                if ($target.length) {
+                    if (base.label) { $target.attr('data-dt-label', base.label); } else { $target.removeAttr('data-dt-label'); }
+                    $target.attr('data-dt-widget', sub.name);
+                    $target.attr('class', ('dt-widget ' + base.classes).trim());
+                    if (base.style) { $target.attr('style', base.style); } else { $target.removeAttr('style'); }
+                    $target.find('.dt-widget-render').html(sub.content);
+                    applyCustomAttributes($target, base.attrs);
+                    commitWorkspace($vDom);
+                    
+                    if (goToNext) triggerGlobalEditNext(base.nodeId, 'widget', direction || 'next');
+                }
+            },
+            onSave: function(base, sub, goToNext, direction) {
+                const $vDom = parseHTMLToVirtualDOM();
+                const $target = $vDom.find(`[data-dt-id="${base.nodeId}"]`).first();
+                if ($target.length) {
+                    if (base.label) { $target.attr('data-dt-label', base.label); } else { $target.removeAttr('data-dt-label'); }
+                    $target.attr('data-dt-widget', sub.name);
+                    $target.attr('class', ('dt-widget ' + base.classes).trim());
+                    if (base.style) { $target.attr('style', base.style); } else { $target.removeAttr('style'); }
+                    $target.find('.dt-widget-render').html(sub.content);
+
+                    // FIX: Extract the updated attributes payload compiled by _getSubclassData()
+                    const freshAttrs = $('#dt-universal-attrs').val().trim();
+                    applyCustomAttributes($target, freshAttrs);
+
+                    commitWorkspace($vDom);
+
+                    if (goToNext) triggerGlobalEditNext(base.nodeId, 'widget', direction || 'next');
+                }
+            }
+        }).widgetEditorTemplateProcessor("open", nodeId, label, classes, style, name, content, attrs);
+    }
+
     // Global Tree Traversal unconstrained by parent layouts
     function triggerGlobalEditNext(nodeId, type, direction = 'next') {
         const $allNodes = $(`#dt-tree-root [data-dt-type="${type}"]`);
@@ -141,7 +183,11 @@ jQuery(document).ready(function($) {
     function applyCustomAttributes($el, attrString) {
         const attrsToRemove = [];
         $.each($el[0].attributes, function(i, attrib) {
-            if (attrib && attrib.name && !attrib.name.startsWith('data-dt-') && attrib.name !== 'class' && attrib.name !== 'style') {
+            // Keep template engine and custom workspace properties intact
+            if (attrib && attrib.name &&
+                !attrib.name.startsWith('data-dt-') &&
+                attrib.name !== 'class' &&
+                attrib.name !== 'style') {
                 attrsToRemove.push(attrib.name);
             }
         });
@@ -153,7 +199,8 @@ jQuery(document).ready(function($) {
         const tempEl = tempDiv.firstChild;
         if (tempEl) {
             $.each(tempEl.attributes, function(i, attrib) {
-                if (attrib.name !== 'class' && attrib.name !== 'style' && !attrib.name.startsWith('data-dt-')) {
+                if (attrib.name !== 'class' && attrib.name !== 'style') {
+                    // Allow data-dt- configuration parameters to pass through
                     $el.attr(attrib.name, attrib.value);
                 }
             });
@@ -163,8 +210,9 @@ jQuery(document).ready(function($) {
     function getCustomAttributesString($el) {
         let attrs = [];
         $.each($el[0].attributes, function(i, attrib) {
-            if (attrib && attrib.name && !attrib.name.startsWith('data-dt-') && attrib.name !== 'class' && attrib.name !== 'style') {
-                attrs.push(`${attrib.name}="${attrib.value}"`);
+            if (attrib && attrib.name && attrib.name !== 'class' && attrib.name !== 'style') {
+                // Keep both standard custom attributes AND template data attributes
+                attrs.push(`${attrib.name}="${attrib.value.replace(/"/g, '&quot;')}"`);
             }
         });
         return attrs.join(' ');
@@ -621,7 +669,11 @@ jQuery(document).ready(function($) {
                 const style = $widget.attr('style') || '';
                 const attrs = getCustomAttributesString($widget);
 
-                openWidgetEditor(nodeId, name, label, classes, style, name, content, attrs);
+                if (name === 'template') {
+                    openWidgetEditorTemplate(nodeId, name, label, classes, style, name, content, attrs);
+                } else {
+                    openWidgetEditor(nodeId, name, label, classes, style, name, content, attrs);
+                }
             }
         });
     }
@@ -656,6 +708,9 @@ jQuery(document).ready(function($) {
             if (widgetType === 'spacer') initialPayload = `<div style="height:40px; background: rgba(0,0,0,0.02); border: 1px dashed rgba(0,0,0,0.05);"></div>`;
 
             const widgetHtml = `<div class="dt-widget" data-dt-type="widget" data-dt-widget="${widgetType}" data-dt-id="${widgetId}"><div class="dt-widget-render">${initialPayload}</div></div>`;
+            $targetColumn.append(widgetHtml);
+        } else if (widgetType === 'template') {
+            const widgetHtml = `<div class="dt-widget" data-dt-type="widget" data-dt-widget="template" data-dt-id="${widgetId}"><div class="dt-widget-render"></div></div>`;
             $targetColumn.append(widgetHtml);
         }
 
@@ -1128,6 +1183,18 @@ jQuery(document).ready(function($) {
         function renderCanvas(htmlContent) {
             $canvasRoot.html(htmlContent);
             $canvasRoot.css('opacity', '1');
+
+            // Phase3 Javascript Components internally inside Sandbox
+            if (iframeWindow.docktreeBootComponent) {
+                $canvasRoot.find('[data-dt-type="widget"]').each(function() {
+                    const id = $(this).attr('data-dt-id');
+                    const scriptPayload = decodeURIComponent($(this).attr('data-dt-js') || '');
+                    const jsonPayload = decodeURIComponent($(this).attr('data-dt-json') || '{}');
+                    if (scriptPayload) {
+                        iframeWindow.docktreeBootComponent(id, scriptPayload, jsonPayload);
+                    }
+                });
+            }
 
             $(iframeDoc).off('click.contextDismiss').on('click.contextDismiss', function(e) {
                 if (!$(e.target).closest('.dt-tree-action-btn, .dt-dropdown-menu').length) {
