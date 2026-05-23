@@ -390,6 +390,7 @@
         },
         open: function(nodeId, labelVal, classVal, styleVal, nameVal, contentHtml, attrsVal) {
             this._super(nodeId, labelVal, classVal, styleVal, attrsVal);
+            this.element.find('#dt-universal-attrs').val((attrsVal || '').replace(/\s*data-dt-\S+="[^"]*"/g, '').trim());
             const rawAttrs = attrsVal || '';
             let rawTpl = '', rawJs = '', rawJson = '{}';
             
