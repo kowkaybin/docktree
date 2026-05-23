@@ -169,6 +169,7 @@ if (!defined('ABSPATH')) exit;
         <li><button type="button" class="dt-add-action-item" data-type="widget" data-widget="button"><span class="dashicons dashicons-admin-links"></span> Action Button</button></li>
         <li><button type="button" class="dt-add-action-item" data-type="widget" data-widget="card"><span class="dashicons dashicons-welcome-widgets-menus"></span> Content Card</button></li>
         <li><button type="button" class="dt-add-action-item" data-type="widget" data-widget="spacer"><span class="dashicons dashicons-editor-expand"></span> Layout Spacer</button></li>
+        <li><button type="button" class="dt-add-action-item" data-type="widget" data-widget="template"><span class="dashicons dashicons-editor-code"></span> Template Processor</button></li>
     </ul>
 </div>
 
