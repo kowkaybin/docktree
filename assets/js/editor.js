@@ -706,12 +706,16 @@ jQuery(document).ready(function($) {
             if (widgetType === 'button') initialPayload = `<div class="text-center"><a href="#" class="btn btn-primary btn-lg">Action Link Button</a></div>`;
             if (widgetType === 'card') initialPayload = `<div class="card"><div class="card-body"><h5 class="card-title">Card Content Title</h5><p class="card-text">Some description paragraph element block metrics here.</p></div></div>`;
             if (widgetType === 'spacer') initialPayload = `<div style="height:40px; background: rgba(0,0,0,0.02); border: 1px dashed rgba(0,0,0,0.05);"></div>`;
+            if (widgetType === 'template') initialPayload = '';
 
             const widgetHtml = `<div class="dt-widget" data-dt-type="widget" data-dt-widget="${widgetType}" data-dt-id="${widgetId}"><div class="dt-widget-render">${initialPayload}</div></div>`;
             $targetColumn.append(widgetHtml);
-        } else if (widgetType === 'template') {
-            const widgetHtml = `<div class="dt-widget" data-dt-type="widget" data-dt-widget="template" data-dt-id="${widgetId}"><div class="dt-widget-render"></div></div>`;
-            $targetColumn.append(widgetHtml);
+
+            if (widgetType === 'template') {
+                commitWorkspace($vDom);
+                openWidgetEditorTemplate(widgetId, 'widget', '', '', '', 'template', '', '');
+                return;
+            }
         }
 
         commitWorkspace($vDom);
