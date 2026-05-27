@@ -19,6 +19,10 @@ jQuery(document).ready(function($) {
     const $savePageBtn = $('#dt-save-page-btn');
     const $previewPageBtn = $('#dt-preview-page-btn');
 
+    // Docktree owns the save flow — remove WP's native exit/dirty prompt
+    $(window).off('beforeunload');
+    window.onbeforeunload = null;
+
     let activeTab = localStorage.getItem('docktree_active_tab') || 'tree';
     let nodeCounter = 1;
     let clipboardNodeHtml = '';
@@ -1323,11 +1327,16 @@ jQuery(document).ready(function($) {
                 post_id:    docktreeData.postId,
                 nonce:      docktreeData.saveNonce,
                 content:    $dtTextarea.val(),
-                post_title: $('#title').val() || ''
+                post_title: $('#title').val() || '',
+                post_name:  $('#post_name').val() || ''
             },
             success: function(response) {
                 $savePageBtn.removeAttr('disabled');
                 if (response.success) {
+                    $wpTextarea.val($dtTextarea.val());
+                    if (typeof tinymce !== 'undefined' && tinymce.get('content')) {
+                        tinymce.get('content').setDirty(false);
+                    }
                     $statusMsg.text('Layout Saved Successfully').css({'background': '#10b981', 'color': '#fff'});
                     setTimeout(() => { $statusMsg.text('Docktree Sandbox Active').css({'background': '', 'color': ''}); }, 2500);
                     if (typeof callback === 'function') callback();
@@ -1352,6 +1361,11 @@ jQuery(document).ready(function($) {
     $savePageBtn.on('click', function(e) {
         e.preventDefault();
         saveLayoutAsync();
+    });
+
+    // Sync Docktree content into WP's form before native WP form submissions
+    $(document).on('click', '#publish, #save-post', function() {
+        $wpTextarea.val($dtTextarea.val());
     });
 
     // Override WP native preview button to use our preview mechanism

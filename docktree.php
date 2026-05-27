@@ -75,6 +75,9 @@ function docktree_save_post_async_callback() {
     if (!empty($_POST['post_title'])) {
         $post_data['post_title'] = sanitize_text_field(wp_unslash($_POST['post_title']));
     }
+    if (!empty($_POST['post_name'])) {
+        $post_data['post_name'] = sanitize_title(wp_unslash($_POST['post_name']));
+    }
 
     $updated_post = wp_update_post($post_data);
 
