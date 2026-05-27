@@ -1380,17 +1380,8 @@ jQuery(document).ready(function($) {
         prepareContentBeforeSave();
     });
 
-    // Override WP native preview button to use our preview mechanism
-    $(document).on('click', '#post-preview', function(e) {
-        e.preventDefault();
-        e.stopImmediatePropagation();
-        $previewPageBtn.trigger('click');
-    });
-
     $previewPageBtn.on('click', function(e) {
-        e.preventDefault();
-        window.dtPreviewContent = $dtTextarea.val();
-        window.open(docktreeData.previewUrl, 'wp_preview' + docktreeData.postId);
+        $('#post-preview').trigger('click');
     });
 });
 var dmp = console.log;

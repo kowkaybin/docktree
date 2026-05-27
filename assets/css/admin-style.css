@@ -544,3 +544,6 @@ body.folded.docktree-focus-mode #docktree-editor-box { left: 36px !important; }
     height: 13px;
 }
 
+.update-nag.notice{
+    display: none;
+}
