@@ -1178,7 +1178,7 @@ jQuery(document).ready(function($) {
 
         if (!iframeWindow) return;
         const iframeDoc = iframeWindow.document;
-        const $canvasRoot = $(iframeDoc).find('#docktree-canvas-root');
+        const $canvasRoot = $(iframeDoc).find('#docktree-canvas-wrapper');
 
         if (!$canvasRoot.length) return;
 
