@@ -22,6 +22,10 @@
     gap: 12px;
 }
 
+#docktree-workspace .button .dashicons {
+  line-height: 1.35em;
+}
+
 .dt-toggle-label {
     display: flex;
     align-items: center;
@@ -269,7 +273,7 @@
    POPUP DROPDOWN CONTEXT LAYER
    ========================================== */
 .dt-dropdown-menu {
-    position: absolute;
+    position: fixed;
     z-index: 100000;
     background: #ffffff;
     border: 1px solid #cbd5e1;
@@ -540,3 +544,6 @@ body.folded.docktree-focus-mode #docktree-editor-box { left: 36px !important; }
     height: 13px;
 }
 
+.update-nag.notice{
+    display: none;
+}

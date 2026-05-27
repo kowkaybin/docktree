@@ -15,9 +15,14 @@ jQuery(document).ready(function($) {
     const $sidebarToggle = $('#dt-sidebar-toggle');
     const $contextMenu = $('#dt-context-menu');
     const $universalAddMenu = $('#dt-universal-add-menu');
+    const $templateSelect = $('#page_template');
 
     const $savePageBtn = $('#dt-save-page-btn');
     const $previewPageBtn = $('#dt-preview-page-btn');
+
+    // Docktree owns the save flow — remove WP's native exit/dirty prompt
+    $(window).off('beforeunload');
+    window.onbeforeunload = null;
 
     let activeTab = localStorage.getItem('docktree_active_tab') || 'tree';
     let nodeCounter = 1;
@@ -428,6 +433,14 @@ jQuery(document).ready(function($) {
     // ==========================================
     // TREE VIEW RENDERING & SORTABLE INTEGRATION
     // ==========================================
+    function positionDropdown($menu, btn) {
+        var rect = btn.getBoundingClientRect();
+        $menu.css({ top: rect.bottom + 'px', left: rect.left + 'px', right: 'auto' }).show();
+        var mr = $menu[0].getBoundingClientRect();
+        if (mr.bottom > window.innerHeight - 8) { $menu.css('top', (rect.top - mr.height) + 'px'); }
+        if (mr.right > window.innerWidth - 8)   { $menu.css('left', (rect.right - mr.width) + 'px'); }
+    }
+
     function buildTreeUI($virtualDOM) {
         const $treeRoot = $('#dt-tree-root');
         $treeRoot.empty();
@@ -597,7 +610,7 @@ jQuery(document).ready(function($) {
             const $pasteStyleBtn = $contextMenu.find('[data-action="paste-style"]');
             if (clipboardStyle) { $pasteStyleBtn.removeAttr('disabled'); } else { $pasteStyleBtn.attr('disabled', 'disabled'); }
 
-            $contextMenu.css({ top: (offset.top + $btn.outerHeight()) + 'px', left: (offset.left - 120) + 'px' }).show();
+            positionDropdown($contextMenu, $btn[0]);
         });
 
         $('.dt-universal-plus-btn').off('click').on('click', function(e) {
@@ -607,7 +620,7 @@ jQuery(document).ready(function($) {
             contextNodeId = $btn.closest('.dt-tree-item').attr('data-dt-id');
 
             $('#dt-widget-search-input').val('').trigger('input');
-            $universalAddMenu.css({ top: (offset.top + $btn.outerHeight()) + 'px', left: (offset.left - 140) + 'px' }).show();
+            positionDropdown($universalAddMenu, $btn[0]);
         });
 
         $('.dt-add-col-btn').off('click').on('click', function(e) {
@@ -706,12 +719,16 @@ jQuery(document).ready(function($) {
             if (widgetType === 'button') initialPayload = `<div class="text-center"><a href="#" class="btn btn-primary btn-lg">Action Link Button</a></div>`;
             if (widgetType === 'card') initialPayload = `<div class="card"><div class="card-body"><h5 class="card-title">Card Content Title</h5><p class="card-text">Some description paragraph element block metrics here.</p></div></div>`;
             if (widgetType === 'spacer') initialPayload = `<div style="height:40px; background: rgba(0,0,0,0.02); border: 1px dashed rgba(0,0,0,0.05);"></div>`;
+            if (widgetType === 'template') initialPayload = '';
 
             const widgetHtml = `<div class="dt-widget" data-dt-type="widget" data-dt-widget="${widgetType}" data-dt-id="${widgetId}"><div class="dt-widget-render">${initialPayload}</div></div>`;
             $targetColumn.append(widgetHtml);
-        } else if (widgetType === 'template') {
-            const widgetHtml = `<div class="dt-widget" data-dt-type="widget" data-dt-widget="template" data-dt-id="${widgetId}"><div class="dt-widget-render"></div></div>`;
-            $targetColumn.append(widgetHtml);
+
+            if (widgetType === 'template') {
+                commitWorkspace($vDom);
+                openWidgetEditorTemplate(widgetId, 'widget', '', '', '', 'template', '', '');
+                return;
+            }
         }
 
         commitWorkspace($vDom);
@@ -1162,7 +1179,7 @@ jQuery(document).ready(function($) {
 
         if (!iframeWindow) return;
         const iframeDoc = iframeWindow.document;
-        const $canvasRoot = $(iframeDoc).find('#docktree-canvas-root');
+        const $canvasRoot = $(iframeDoc).find('#docktree-canvas-wrapper');
 
         if (!$canvasRoot.length) return;
 
@@ -1172,7 +1189,8 @@ jQuery(document).ready(function($) {
             $.post(docktreeData.ajaxUrl, {
                 action: 'docktree_parse_content',
                 content: rawHTML,
-                shortcodes: 'true'
+                shortcodes: 'true',
+                template: $templateSelect.val(),
             }, function(response) {
                 if (response.success) { renderCanvas(response.data); } else { renderCanvas(rawHTML); }
             });
@@ -1299,6 +1317,9 @@ jQuery(document).ready(function($) {
     // NON-DESTRUCTIVE ASYNCHRONOUS SAVE WRAPPERS
     // ==========================================
     function saveLayoutAsync(callback) {
+        // Run preparation right before gathering data for the AJAX payload
+        prepareContentBeforeSave();
+
         const $statusMsg = $('#dt-runtime-status');
         $statusMsg.text('Saving layout structures...').css({'background': '#f59e0b', 'color': '#fff'});
         $savePageBtn.attr('disabled', 'disabled');
@@ -1307,14 +1328,19 @@ jQuery(document).ready(function($) {
             url: docktreeData.ajaxUrl,
             type: 'POST',
             data: {
-                action: 'docktree_save_post_async',
-                post_id: docktreeData.postId,
-                nonce: docktreeData.saveNonce,
-                content: $dtTextarea.val()
+                action:     'docktree_save_post_async',
+                post_id:    docktreeData.postId,
+                nonce:      docktreeData.saveNonce,
+                content:    $dtTextarea.val(),
+                post_title: $('#title').val() || '',
+                post_name:  $('#post_name').val() || ''
             },
             success: function(response) {
                 $savePageBtn.removeAttr('disabled');
                 if (response.success) {
+                    if (typeof tinymce !== 'undefined' && tinymce.get('content')) {
+                        tinymce.get('content').setDirty(false);
+                    }
                     $statusMsg.text('Layout Saved Successfully').css({'background': '#10b981', 'color': '#fff'});
                     setTimeout(() => { $statusMsg.text('Docktree Sandbox Active').css({'background': '', 'color': ''}); }, 2500);
                     if (typeof callback === 'function') callback();
@@ -1328,22 +1354,36 @@ jQuery(document).ready(function($) {
             }
         });
     }
+    function prepareContentBeforeSave() {
+        const wpEditorId = 'content'; // Default WordPress editor ID
+
+        // 1. Force the WordPress editor to switch to HTML mode if it's currently on Visual (TMCE)
+        if (typeof switchEditors !== 'undefined' && $('#wp-' + wpEditorId + '-wrap').hasClass('tmce-active')) {
+            switchEditors.go(wpEditorId, 'html');
+        }
+
+        // 2. Sync your editor's current content directly into WordPress's master textarea
+        $wpTextarea.val($dtTextarea.val());
+    }
+    // Set save button label based on post status
+    if (docktreeData.postStatus === 'publish' || docktreeData.postStatus === 'private') {
+        $('#dt-save-label').text('Save Page');
+    } else {
+        $('#dt-save-label').text('Save Draft');
+    }
 
     $savePageBtn.on('click', function(e) {
         e.preventDefault();
         saveLayoutAsync();
     });
 
+    // Sync Docktree content into WP's form before native WP form submissions
+    $(document).on('click', '#publish, #save-post', function() {
+        prepareContentBeforeSave();
+    });
+
     $previewPageBtn.on('click', function(e) {
-        e.preventDefault();
-        saveLayoutAsync(function() {
-            const viewLink = $('#view-post-btn a').attr('href') || $('#sample-permalink a').attr('href');
-            if (viewLink) {
-                window.open(viewLink, '_blank');
-            } else {
-                $('#post-preview').trigger('click');
-            }
-        });
+        $('#post-preview').trigger('click');
     });
 });
 var dmp = console.log;

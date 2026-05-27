@@ -23,10 +23,10 @@ if (!defined('ABSPATH')) exit;
         <div class="dt-toolbar-right">
             <span class="dt-status-msg" id="dt-runtime-status">Docktree Sandbox Active</span>
             <button type="button" id="dt-save-page-btn" class="button button-primary">
-                <span class="dashicons dashicons-saved"></span> Save Page
+                <span class="dashicons dashicons-saved"></span> <span id="dt-save-label">Save Page</span>
             </button>
             <button type="button" id="dt-preview-page-btn" class="button">
-                <span class="dashicons dashicons-visibility"></span> View Page
+                <span class="dashicons dashicons-visibility"></span> Preview Changes
             </button>
         </div>
     </div>
@@ -169,6 +169,7 @@ if (!defined('ABSPATH')) exit;
         <li><button type="button" class="dt-add-action-item" data-type="widget" data-widget="button"><span class="dashicons dashicons-admin-links"></span> Action Button</button></li>
         <li><button type="button" class="dt-add-action-item" data-type="widget" data-widget="card"><span class="dashicons dashicons-welcome-widgets-menus"></span> Content Card</button></li>
         <li><button type="button" class="dt-add-action-item" data-type="widget" data-widget="spacer"><span class="dashicons dashicons-editor-expand"></span> Layout Spacer</button></li>
+        <li><button type="button" class="dt-add-action-item" data-type="widget" data-widget="template"><span class="dashicons dashicons-editor-code"></span> Template Processor</button></li>
     </ul>
 </div>
 
