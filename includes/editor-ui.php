@@ -26,7 +26,7 @@ if (!defined('ABSPATH')) exit;
                 <span class="dashicons dashicons-saved"></span> Save Page
             </button>
             <button type="button" id="dt-preview-page-btn" class="button">
-                <span class="dashicons dashicons-visibility"></span> View Page
+                <span class="dashicons dashicons-visibility"></span> Preview Changes
             </button>
         </div>
     </div>

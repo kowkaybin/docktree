@@ -31,8 +31,6 @@ function docktree_admin_assets($hook) {
 
         wp_localize_script('docktree-admin-js', 'docktreeData', array(
             'previewUrl' => add_query_arg('docktree_preview', '1', get_permalink()),
-            'permalink'  => get_permalink($post->ID),
-            'postStatus' => get_post_status($post->ID),
             'ajaxUrl'    => admin_url('admin-ajax.php'),
             'postId'     => $post->ID,
             'saveNonce'  => wp_create_nonce('update-post_' . $post->ID)

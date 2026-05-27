@@ -1340,15 +1340,11 @@ jQuery(document).ready(function($) {
 
     $previewPageBtn.on('click', function(e) {
         e.preventDefault();
-        saveLayoutAsync(function() {
-            var base = docktreeData.permalink;
-            var sep = base.indexOf('?') > -1 ? '&' : '?';
-            var url = (docktreeData.postStatus === 'publish')
-                ? base + sep + 'dt=' + Date.now()
-                : base + sep + 'preview=true&dt=' + Date.now();
-            var previewWindow = window.open(url, 'wp_preview' + docktreeData.postId);
-            if (previewWindow) previewWindow.focus();
-        });
+        var html = $dtTextarea.val();
+        var iframeDoc = $iframe[0].contentDocument;
+        iframeDoc.open();
+        iframeDoc.write(html);
+        iframeDoc.close();
     });
 });
 var dmp = console.log;
