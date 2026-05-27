@@ -1341,10 +1341,9 @@ jQuery(document).ready(function($) {
     $previewPageBtn.on('click', function(e) {
         e.preventDefault();
         var html = $dtTextarea.val();
-        var iframeDoc = $iframe[0].contentDocument;
-        iframeDoc.open();
-        iframeDoc.write(html);
-        iframeDoc.close();
+        var blob = new Blob([html], { type: 'text/html' });
+        var blobUrl = URL.createObjectURL(blob);
+        window.open(blobUrl, '_blank');
     });
 });
 var dmp = console.log;
