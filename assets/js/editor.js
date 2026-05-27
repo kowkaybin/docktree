@@ -1341,12 +1341,12 @@ jQuery(document).ready(function($) {
     $previewPageBtn.on('click', function(e) {
         e.preventDefault();
         saveLayoutAsync(function() {
-            const viewLink = $('#view-post-btn a').attr('href') || $('#sample-permalink a').attr('href');
-            if (viewLink) {
-                window.open(viewLink, '_blank');
-            } else {
-                $('#post-preview').trigger('click');
-            }
+            var base = docktreeData.permalink;
+            var sep = base.indexOf('?') > -1 ? '&' : '?';
+            var url = (docktreeData.postStatus === 'publish')
+                ? base + sep + 'dt=' + Date.now()
+                : base + sep + 'preview=true&dt=' + Date.now();
+            window.open(url, '_blank');
         });
     });
 });
