@@ -144,7 +144,7 @@ function docktree_parse_content_ajax() {
 
     // --- START TEMPLATE EMULATION ---
 
-// 1. Create a mock post object to satisfy the loop
+    // 1. Create a mock post object to satisfy the loop
     $mock_post = new WP_Post((object) array(
         'ID'             => -999, // Dummy ID
         'post_content'   => $content,
@@ -152,7 +152,6 @@ function docktree_parse_content_ajax() {
         'post_status'    => 'publish',
         'filter'         => 'raw'
     ));
-
     // 2. Setup the global query variables
     global $wp_query, $post;
     $original_query = $wp_query;
@@ -173,6 +172,8 @@ function docktree_parse_content_ajax() {
     };
     add_filter('the_content', $content_override, 999);
 
+    wp_deregister_script( 'jquery' ); // Crucial step for enabling $
+
     // 4. Capture the template execution
     ob_start();
 
@@ -186,12 +187,27 @@ function docktree_parse_content_ajax() {
     } else {
         echo '<div class="bg-danger text-light text-center font-weight-medium">NO TEMPLATE SELECTED</div>';
         get_header();
-        echo $content;
+        // echo $content;
         get_footer();
 
     }
 
     $full_page_preview = ob_get_clean();
+
+    // // Dealing with the jquery script inside <HEAD> where WP loves to modify include path into /wp-admin/load-scripts.php?c=0&load%5Bchunk_0%5D=jquery-core,jquery-migrate&ver=5.9.2
+    //     // This matches the exact script tag loading load-scripts.php
+    //     $pattern = '/<script\s+src=[\'"]' . preg_quote(admin_url('load-scripts.php'), '/') . '[^>]*><\/script>/i';
+    //     $full_page_preview = preg_replace($pattern, '', $full_page_preview);
+
+    //     // Inject your local custom jQuery script manually if it was stripped or missed
+    //     $my_jquery = "<script src='" . get_template_directory_uri() . "/js/vendor/jquery.min.js?ver=3.7.1'></script>\n";
+
+    //     // Insert your clean jQuery right before the closing </head> or </body> tag
+    //     if ( strpos($full_page_preview, '</head>') !== false ) {
+    //         $full_page_preview = str_replace('</head>', $my_jquery . '</head>', $full_page_preview);
+    //     } else {
+    //         $full_page_preview = $my_jquery . $full_page_preview;
+    //     }
 
     // 5. Restore original global states to prevent admin breakages
     remove_filter('the_content', $content_override, 999);
