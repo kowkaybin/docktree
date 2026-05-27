@@ -1336,7 +1336,6 @@ jQuery(document).ready(function($) {
             success: function(response) {
                 $savePageBtn.removeAttr('disabled');
                 if (response.success) {
-                    $wpTextarea.val($dtTextarea.val());
                     if (typeof tinymce !== 'undefined' && tinymce.get('content')) {
                         tinymce.get('content').setDirty(false);
                     }
@@ -1378,10 +1377,7 @@ jQuery(document).ready(function($) {
 
     // Sync Docktree content into WP's form before native WP form submissions
     $(document).on('click', '#publish, #save-post', function() {
-        dmp($dtTextarea.val());
-        $wpTextarea.val($dtTextarea.val());
-        dmp($wpTextarea);
-        debugger
+        prepareContentBeforeSave();
     });
 
     // Override WP native preview button to use our preview mechanism
