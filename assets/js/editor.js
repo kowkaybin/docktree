@@ -1346,7 +1346,8 @@ jQuery(document).ready(function($) {
             var url = (docktreeData.postStatus === 'publish')
                 ? base + sep + 'dt=' + Date.now()
                 : base + sep + 'preview=true&dt=' + Date.now();
-            window.open(url, '_blank');
+            var previewWindow = window.open(url, 'wp_preview' + docktreeData.postId);
+            if (previewWindow) previewWindow.focus();
         });
     });
 });
