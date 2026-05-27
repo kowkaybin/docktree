@@ -90,7 +90,7 @@ function docktree_save_post_async_callback() {
 
 // AJAX handler for parsing shortcodes
 add_action('wp_ajax_docktree_parse_content', 'docktree_parse_content_ajax');
-function docktree_parse_content_ajax() {
+function docktree_parse_content_ajax_basic() {
     if (!current_user_can('edit_posts')) {
         wp_send_json_error('Unauthorized');
     }
@@ -103,6 +103,133 @@ function docktree_parse_content_ajax() {
     }
 
     wp_send_json_success($content);
+}
+
+function docktree_parse_content_ajax() {
+    if (!current_user_can('edit_posts')) {
+        wp_send_json_error('Unauthorized');
+    }
+
+    if ( ! class_exists( 'WP_Block_Editor_Context' ) ) {
+        require_once ABSPATH . 'wp-includes/class-wp-block-editor-context.php';
+    }
+
+    if ( ! function_exists( 'get_current_screen' ) ) {
+        require_once ABSPATH . 'wp-admin/includes/screen.php';
+    }
+
+    $GLOBALS['current_screen'] = convert_to_screen( 'post' );
+    $GLOBALS['current_screen']->is_block_editor( true );
+
+    $content = isset($_POST['content']) ? wp_unslash($_POST['content']) : '';
+
+    // Fix: Use your specific template part pattern here
+    if ( preg_match_all( '//', $content, $matches ) ) {
+        foreach ( $matches[1] as $index => $slug ) {
+            ob_start();
+            get_template_part( sanitize_text_field( $slug ) );
+            $template_html = ob_get_clean();
+
+            $content = str_replace( $matches[0][$index], $template_html, $content );
+        }
+    }
+
+    if ( function_exists( 'do_blocks' ) ) {
+        $content = do_blocks( $content );
+    }
+
+    if ( isset($_POST['shortcodes']) && $_POST['shortcodes'] === 'true' ) {
+        $content = do_shortcode( $content );
+    }
+
+    // --- START TEMPLATE EMULATION ---
+
+// 1. Create a mock post object to satisfy the loop
+    $mock_post = new WP_Post((object) array(
+        'ID'             => -999, // Dummy ID
+        'post_content'   => $content,
+        'post_type'      => 'page',
+        'post_status'    => 'publish',
+        'filter'         => 'raw'
+    ));
+
+    // 2. Setup the global query variables
+    global $wp_query, $post;
+    $original_query = $wp_query;
+    $original_post  = $post;
+
+    // Force wp_query to think it found 1 post
+    $wp_query = new WP_Query();
+    $wp_query->posts = array($mock_post);
+    $wp_query->post_count = 1;
+    $wp_query->current_post = -1;
+    $wp_query->in_the_loop = false;
+    $wp_query->post = $mock_post;
+    $post = $mock_post;
+
+    // 3. Override the_content filter to return our compiled content
+    $content_override = function() use ($content) {
+        return $content;
+    };
+    add_filter('the_content', $content_override, 999);
+
+    // 4. Capture the template execution
+    ob_start();
+
+    // locate_template falls back to default files if the posted template doesn't exist
+    $posted_template = isset($_POST['template']) ? sanitize_text_field($_POST['template']) : '';
+    $custom_template = locate_template(array($posted_template/*, 'page.php', 'index.php'*/));
+
+    if ( $custom_template ) {
+        // This now triggers have_posts() and the_post() successfully
+        include $custom_template;
+    } else {
+        echo '<div class="bg-danger text-light text-center font-weight-medium">NO TEMPLATE SELECTED</div>';
+        get_header();
+        echo $content;
+        get_footer();
+
+    }
+
+    $full_page_preview = ob_get_clean();
+
+    // 5. Restore original global states to prevent admin breakages
+    remove_filter('the_content', $content_override, 999);
+    $wp_query = $original_query;
+    $post = $original_post;
+    wp_reset_postdata();
+
+    // --- END TEMPLATE EMULATION ---
+
+    wp_send_json_success( $full_page_preview );
+}
+
+function docktree_render_preview_template($template) {
+    // Search for your specific custom template file first
+    $preview_template = locate_template(array('templates/preview-template.php', 'page.php', 'index.php'));
+
+    if ($preview_template) {
+        add_filter('the_content', 'docktree_inject_preview_content');
+        return $preview_template;
+    }
+
+    return $template;
+}
+
+function docktree_inject_preview_content($default_content) {
+    global $docktree_preview_content;
+
+    $content = $docktree_preview_content;
+
+    // Run your block and shortcode parsing logic here
+    if (function_exists('do_blocks')) {
+        $content = do_blocks($content);
+    }
+    if (isset($_POST['shortcodes']) && $_POST['shortcodes'] === 'true') {
+        $content = do_shortcode($content);
+    }
+
+    return $content;
 }
 
 // Hijack frontend template for the isolated workspace preview

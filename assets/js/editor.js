@@ -15,6 +15,7 @@ jQuery(document).ready(function($) {
     const $sidebarToggle = $('#dt-sidebar-toggle');
     const $contextMenu = $('#dt-context-menu');
     const $universalAddMenu = $('#dt-universal-add-menu');
+    const $templateSelect = $('#page_template');
 
     const $savePageBtn = $('#dt-save-page-btn');
     const $previewPageBtn = $('#dt-preview-page-btn');
@@ -1188,7 +1189,8 @@ jQuery(document).ready(function($) {
             $.post(docktreeData.ajaxUrl, {
                 action: 'docktree_parse_content',
                 content: rawHTML,
-                shortcodes: 'true'
+                shortcodes: 'true',
+                template: $templateSelect.val(),
             }, function(response) {
                 if (response.success) { renderCanvas(response.data); } else { renderCanvas(rawHTML); }
             });
