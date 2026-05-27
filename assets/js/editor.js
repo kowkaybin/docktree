@@ -1365,6 +1365,8 @@ jQuery(document).ready(function($) {
 
     // Sync Docktree content into WP's form before native WP form submissions
     $(document).on('click', '#publish, #save-post', function() {
+        debugger
+        dmp($dtTextarea.val());
         $wpTextarea.val($dtTextarea.val());
     });
 
