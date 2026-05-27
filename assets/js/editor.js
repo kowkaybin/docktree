@@ -1315,6 +1315,9 @@ jQuery(document).ready(function($) {
     // NON-DESTRUCTIVE ASYNCHRONOUS SAVE WRAPPERS
     // ==========================================
     function saveLayoutAsync(callback) {
+        // Run preparation right before gathering data for the AJAX payload
+        prepareContentBeforeSave();
+
         const $statusMsg = $('#dt-runtime-status');
         $statusMsg.text('Saving layout structures...').css({'background': '#f59e0b', 'color': '#fff'});
         $savePageBtn.attr('disabled', 'disabled');
@@ -1350,7 +1353,17 @@ jQuery(document).ready(function($) {
             }
         });
     }
+    function prepareContentBeforeSave() {
+        const wpEditorId = 'content'; // Default WordPress editor ID
 
+        // 1. Force the WordPress editor to switch to HTML mode if it's currently on Visual (TMCE)
+        if (typeof switchEditors !== 'undefined' && $('#wp-' + wpEditorId + '-wrap').hasClass('tmce-active')) {
+            switchEditors.go(wpEditorId, 'html');
+        }
+
+        // 2. Sync your editor's current content directly into WordPress's master textarea
+        $wpTextarea.val($dtTextarea.val());
+    }
     // Set save button label based on post status
     if (docktreeData.postStatus === 'publish' || docktreeData.postStatus === 'private') {
         $('#dt-save-label').text('Save Page');
@@ -1365,9 +1378,10 @@ jQuery(document).ready(function($) {
 
     // Sync Docktree content into WP's form before native WP form submissions
     $(document).on('click', '#publish, #save-post', function() {
-        debugger
         dmp($dtTextarea.val());
         $wpTextarea.val($dtTextarea.val());
+        dmp($wpTextarea);
+        debugger
     });
 
     // Override WP native preview button to use our preview mechanism
