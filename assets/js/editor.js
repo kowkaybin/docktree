@@ -1340,10 +1340,8 @@ jQuery(document).ready(function($) {
 
     $previewPageBtn.on('click', function(e) {
         e.preventDefault();
-        var html = $dtTextarea.val();
-        var blob = new Blob([html], { type: 'text/html' });
-        var blobUrl = URL.createObjectURL(blob);
-        window.open(blobUrl, '_blank');
+        window.dtPreviewContent = $dtTextarea.val();
+        window.open(docktreeData.previewUrl, '_blank');
     });
 });
 var dmp = console.log;

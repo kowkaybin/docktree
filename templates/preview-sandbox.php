@@ -9,7 +9,22 @@ get_header();
     <div id="docktree-canvas-root" class="container"></div>
 </div>
 
+<script>
+(function() {
+    function inject() {
+        var root = document.getElementById('docktree-canvas-root');
+        if (root && window.opener && typeof window.opener.dtPreviewContent === 'string') {
+            root.innerHTML = window.opener.dtPreviewContent;
+        }
+    }
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', inject);
+    } else {
+        inject();
+    }
+})();
+</script>
+
 <?php
-// Load standard theme footers and scripts
 get_footer();
 ?>
