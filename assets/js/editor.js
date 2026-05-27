@@ -1341,7 +1341,7 @@ jQuery(document).ready(function($) {
     $previewPageBtn.on('click', function(e) {
         e.preventDefault();
         window.dtPreviewContent = $dtTextarea.val();
-        window.open(docktreeData.previewUrl, '_blank');
+        window.open(docktreeData.previewUrl, 'wp_preview' + docktreeData.postId);
     });
 });
 var dmp = console.log;
