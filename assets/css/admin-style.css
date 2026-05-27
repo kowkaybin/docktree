@@ -273,7 +273,7 @@
    POPUP DROPDOWN CONTEXT LAYER
    ========================================== */
 .dt-dropdown-menu {
-    position: absolute;
+    position: fixed;
     z-index: 100000;
     background: #ffffff;
     border: 1px solid #cbd5e1;

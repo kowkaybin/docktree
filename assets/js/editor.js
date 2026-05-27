@@ -428,6 +428,14 @@ jQuery(document).ready(function($) {
     // ==========================================
     // TREE VIEW RENDERING & SORTABLE INTEGRATION
     // ==========================================
+    function positionDropdown($menu, btn) {
+        var rect = btn.getBoundingClientRect();
+        $menu.css({ top: rect.bottom + 'px', left: rect.left + 'px', right: 'auto' }).show();
+        var mr = $menu[0].getBoundingClientRect();
+        if (mr.bottom > window.innerHeight - 8) { $menu.css('top', (rect.top - mr.height) + 'px'); }
+        if (mr.right > window.innerWidth - 8)   { $menu.css('left', (rect.right - mr.width) + 'px'); }
+    }
+
     function buildTreeUI($virtualDOM) {
         const $treeRoot = $('#dt-tree-root');
         $treeRoot.empty();
@@ -597,7 +605,7 @@ jQuery(document).ready(function($) {
             const $pasteStyleBtn = $contextMenu.find('[data-action="paste-style"]');
             if (clipboardStyle) { $pasteStyleBtn.removeAttr('disabled'); } else { $pasteStyleBtn.attr('disabled', 'disabled'); }
 
-            $contextMenu.css({ top: (offset.top + $btn.outerHeight()) + 'px', left: (offset.left - 120) + 'px' }).show();
+            positionDropdown($contextMenu, $btn[0]);
         });
 
         $('.dt-universal-plus-btn').off('click').on('click', function(e) {
@@ -607,7 +615,7 @@ jQuery(document).ready(function($) {
             contextNodeId = $btn.closest('.dt-tree-item').attr('data-dt-id');
 
             $('#dt-widget-search-input').val('').trigger('input');
-            $universalAddMenu.css({ top: (offset.top + $btn.outerHeight()) + 'px', left: (offset.left - 140) + 'px' }).show();
+            positionDropdown($universalAddMenu, $btn[0]);
         });
 
         $('.dt-add-col-btn').off('click').on('click', function(e) {
