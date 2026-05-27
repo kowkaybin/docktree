@@ -23,7 +23,7 @@ if (!defined('ABSPATH')) exit;
         <div class="dt-toolbar-right">
             <span class="dt-status-msg" id="dt-runtime-status">Docktree Sandbox Active</span>
             <button type="button" id="dt-save-page-btn" class="button button-primary">
-                <span class="dashicons dashicons-saved"></span> Save Page
+                <span class="dashicons dashicons-saved"></span> <span id="dt-save-label">Save Page</span>
             </button>
             <button type="button" id="dt-preview-page-btn" class="button">
                 <span class="dashicons dashicons-visibility"></span> Preview Changes

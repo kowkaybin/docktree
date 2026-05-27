@@ -31,6 +31,7 @@ function docktree_admin_assets($hook) {
 
         wp_localize_script('docktree-admin-js', 'docktreeData', array(
             'previewUrl' => add_query_arg('docktree_preview', '1', get_permalink()),
+            'postStatus' => get_post_status($post->ID),
             'ajaxUrl'    => admin_url('admin-ajax.php'),
             'postId'     => $post->ID,
             'saveNonce'  => wp_create_nonce('update-post_' . $post->ID)
@@ -69,11 +70,13 @@ function docktree_save_post_async_callback() {
     check_ajax_referer('update-post_' . $post_id, 'nonce');
 
     $content = isset($_POST['content']) ? wp_unslash($_POST['content']) : '';
+    $post_data = array('ID' => $post_id, 'post_content' => $content);
 
-    $updated_post = wp_update_post(array(
-        'ID'           => $post_id,
-        'post_content' => $content
-    ));
+    if (!empty($_POST['post_title'])) {
+        $post_data['post_title'] = sanitize_text_field(wp_unslash($_POST['post_title']));
+    }
+
+    $updated_post = wp_update_post($post_data);
 
     if (is_wp_error($updated_post)) {
         wp_send_json_error($updated_post->get_error_message());

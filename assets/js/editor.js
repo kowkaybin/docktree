@@ -1319,10 +1319,11 @@ jQuery(document).ready(function($) {
             url: docktreeData.ajaxUrl,
             type: 'POST',
             data: {
-                action: 'docktree_save_post_async',
-                post_id: docktreeData.postId,
-                nonce: docktreeData.saveNonce,
-                content: $dtTextarea.val()
+                action:     'docktree_save_post_async',
+                post_id:    docktreeData.postId,
+                nonce:      docktreeData.saveNonce,
+                content:    $dtTextarea.val(),
+                post_title: $('#title').val() || ''
             },
             success: function(response) {
                 $savePageBtn.removeAttr('disabled');
@@ -1341,15 +1342,29 @@ jQuery(document).ready(function($) {
         });
     }
 
+    // Set save button label based on post status
+    if (docktreeData.postStatus === 'publish' || docktreeData.postStatus === 'private') {
+        $('#dt-save-label').text('Save Page');
+    } else {
+        $('#dt-save-label').text('Save Draft');
+    }
+
     $savePageBtn.on('click', function(e) {
         e.preventDefault();
         saveLayoutAsync();
     });
 
+    // Override WP native preview button to use our preview mechanism
+    $(document).on('click', '#post-preview', function(e) {
+        e.preventDefault();
+        e.stopImmediatePropagation();
+        $previewPageBtn.trigger('click');
+    });
+
     $previewPageBtn.on('click', function(e) {
         e.preventDefault();
         window.dtPreviewContent = $dtTextarea.val();
-        window.open(docktreeData.previewUrl, 'wp_preview' + docktreeData.postId);
+        window.open(docktreeData.previewUrl, '_blank');
     });
 });
 var dmp = console.log;
