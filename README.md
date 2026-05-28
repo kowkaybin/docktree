@@ -54,7 +54,10 @@ Docktree adds `data-dt-id` and `data-dt-type` tracking attributes on the fly. Th
 
 ```bash
 cd wp-content/plugins
-git clone https://github.com/kowkaybin/docktree.git
+#git clone 
+git clone --filter=blob:none --no-checkout <your-repo-url> && cd <your-repo-folder> && git config core.sparseCheckout true && echo "/*" > .git/info/sparse-checkout && echo "!/DEV/" >> .git/info/sparse-checkout && git checkout main
+
+https://github.com/kowkaybin/docktree.git
 ```
 
 1. Go to **WordPress Admin → Plugins** and activate **Docktree**
