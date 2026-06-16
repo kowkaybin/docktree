@@ -11,11 +11,16 @@ if (!defined('ABSPATH')) exit;
 define('DOCKTREE_PATH', plugin_dir_path(__FILE__));
 define('DOCKTREE_URL', plugin_dir_url(__FILE__));
 
+// Post types that Docktree manages — extend via add_filter('docktree_post_types', ...)
+function docktree_post_types() {
+    return apply_filters('docktree_post_types', array('page', 'post'));
+}
+
 // Enqueue Admin Assets
 add_action('admin_enqueue_scripts', 'docktree_admin_assets');
 function docktree_admin_assets($hook) {
     global $post_type, $post;
-    if (in_array($hook, array('post.php', 'post-new.php')) && $post_type === 'page') {
+    if (in_array($hook, array('post.php', 'post-new.php')) && in_array($post_type, docktree_post_types())) {
         wp_enqueue_script('sortable-js', 'https://cdn.jsdelivr.net/npm/sortablejs@1.15.2/Sortable.min.js', array(), '1.15.2', true);
 
         wp_enqueue_script('jquery-ui-core');
@@ -46,7 +51,7 @@ function docktree_register_metabox() {
         'docktree-editor-box',
         __('Docktree Engine Workspace', 'docktree'),
         'docktree_render_callback',
-        'page',
+        docktree_post_types(),
         'normal',
         'high'
     );
@@ -259,10 +264,10 @@ function docktree_render_preview_sandbox() {
     }
 }
 
-// Disable Gutenberg Block Editor completely for standard Pages
+// Disable Gutenberg for all Docktree-managed post types
 add_filter('use_block_editor_for_post_type', 'docktree_disable_gutenberg', 10, 2);
 function docktree_disable_gutenberg($current_status, $post_type) {
-    if ($post_type === 'page') {
+    if (in_array($post_type, docktree_post_types())) {
         return false;
     }
     return $current_status;
