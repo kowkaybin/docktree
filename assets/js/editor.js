@@ -1419,7 +1419,17 @@ jQuery(document).ready(function($) {
     });
 
     $previewPageBtn.on('click', function(e) {
+        e.preventDefault();
+        prepareContentBeforeSave();
         $('#post-preview').trigger('click');
+    });
+
+    // Keep WP's classic editor in Text mode so its native preview/save always
+    // reads the synced #content textarea (visual TinyMCE would ignore our updates)
+    $(window).on('load', function() {
+        if (typeof switchEditors !== 'undefined' && $('#wp-content-wrap').hasClass('tmce-active')) {
+            switchEditors.go('content', 'html');
+        }
     });
 });
 var dmp = console.log;
