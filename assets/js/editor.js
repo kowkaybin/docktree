@@ -361,6 +361,104 @@ jQuery(document).ready(function($) {
         }
     }
 
+    // ==========================================
+    // MEDIA LIBRARY IMAGE INSERTION
+    // ==========================================
+    var dtMediaFrame = null;
+    var savedImageRange = null;
+
+    $('#dt-insert-image-btn').on('click', function() {
+        var iframeWindow = $iframe[0] && $iframe[0].contentWindow;
+        savedImageRange = null;
+        if (iframeWindow) {
+            var sel = iframeWindow.getSelection();
+            if (sel && sel.rangeCount > 0) {
+                savedImageRange = sel.getRangeAt(0).cloneRange();
+            }
+        }
+
+        if (!dtMediaFrame) {
+            dtMediaFrame = wp.media({
+                title: 'Insert Image',
+                button: { text: 'Insert Image' },
+                multiple: false,
+                library: { type: 'image' },
+                displaySettings: true,
+                displayUserSettings: false
+            });
+
+            dtMediaFrame.on('select', function() {
+                var state = dtMediaFrame.state();
+                var attachment = state.get('selection').first().toJSON();
+                var display = state.display(state.get('selection').first()).toJSON();
+
+                var sizes = attachment.sizes || {};
+                var sizeKey = display.size || 'full';
+                var sizeData = sizes[sizeKey] || sizes.full || { url: attachment.url, width: attachment.width, height: attachment.height };
+
+                var url = sizeData.url;
+                var width = sizeData.width || '';
+                var height = sizeData.height || '';
+                var alt = (attachment.alt || '').replace(/"/g, '&quot;');
+                var caption = attachment.caption || '';
+
+                var widthAttr = width ? ' width="' + width + '"' : '';
+                var heightAttr = height ? ' height="' + height + '"' : '';
+                var imgTag = '<img src="' + url + '" alt="' + alt + '"' + widthAttr + heightAttr + ' />';
+                var figureHtml = caption
+                    ? '<figure class="wp-block-image">' + imgTag + '<figcaption>' + caption + '</figcaption></figure>'
+                    : '<figure class="wp-block-image">' + imgTag + '</figure>';
+
+                insertAtCursorOrAppend(figureHtml);
+            });
+        }
+
+        dtMediaFrame.open();
+    });
+
+    function insertAtCursorOrAppend(html) {
+        var iframeWindow = $iframe[0] && $iframe[0].contentWindow;
+        if (!iframeWindow) return;
+        var iframeDoc = iframeWindow.document;
+        var $root = $(iframeDoc).find('#docktree-canvas-root');
+        if (!$root.length) return;
+
+        if (savedImageRange) {
+            try {
+                var sel = iframeWindow.getSelection();
+                sel.removeAllRanges();
+                sel.addRange(savedImageRange);
+                var range = sel.getRangeAt(0);
+                range.deleteContents();
+
+                var temp = iframeDoc.createElement('div');
+                temp.innerHTML = html;
+                var frag = iframeDoc.createDocumentFragment();
+                var lastChild = null;
+                while (temp.firstChild) {
+                    lastChild = temp.firstChild;
+                    frag.appendChild(lastChild);
+                }
+                range.insertNode(frag);
+
+                if (lastChild) {
+                    range.setStartAfter(lastChild);
+                    range.collapse(true);
+                    sel.removeAllRanges();
+                    sel.addRange(range);
+                }
+            } catch (e) {
+                $root.append(html);
+            }
+        } else {
+            $root.append(html);
+        }
+
+        var updatedHtml = $root.html();
+        $dtTextarea.val(updatedHtml);
+        $wpTextarea.val(updatedHtml);
+    }
+
     $dtTextarea.on('input propertychange change', function() {
         $wpTextarea.val($(this).val());
         enforceModeForContent();

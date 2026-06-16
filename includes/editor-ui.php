@@ -50,6 +50,11 @@ if (!defined('ABSPATH')) exit;
             <div class="dt-tab-content-wrapper">
                 <!-- Tab 1: HTML Raw View -->
                 <div class="dt-tab-view" id="dt-view-html">
+                    <div class="dt-html-toolbar">
+                        <button type="button" class="button button-small" id="dt-insert-image-btn">
+                            <span class="dashicons dashicons-format-image"></span> Insert Image
+                        </button>
+                    </div>
                     <textarea name="docktree-shadow-textarea" id="docktree-shadow-textarea" rows="25" placeholder="Type Bootstrap HTML or structures here..."></textarea>
                 </div>
 

@@ -165,6 +165,13 @@
 /* ==========================================
    NESTABLE TREE VIEW STRUCTURE STYLE
    ========================================== */
+.dt-html-toolbar {
+    padding: 6px 8px;
+    border-bottom: 1px solid #f1f5f9;
+    background: #fafafa;
+    flex-shrink: 0;
+}
+
 .tree-actions-toolbar {
     padding-bottom: 8px;
     border-bottom: 1px solid #f1f5f9;

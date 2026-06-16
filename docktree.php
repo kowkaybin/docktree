@@ -21,6 +21,7 @@ add_action('admin_enqueue_scripts', 'docktree_admin_assets');
 function docktree_admin_assets($hook) {
     global $post_type, $post;
     if (in_array($hook, array('post.php', 'post-new.php')) && in_array($post_type, docktree_post_types())) {
+        wp_enqueue_media();
         wp_enqueue_script('sortable-js', 'https://cdn.jsdelivr.net/npm/sortablejs@1.15.2/Sortable.min.js', array(), '1.15.2', true);
 
         wp_enqueue_script('jquery-ui-core');
