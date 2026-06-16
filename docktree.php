@@ -190,11 +190,8 @@ function docktree_parse_content_ajax() {
         // This now triggers have_posts() and the_post() successfully
         include $custom_template;
     } else {
-        echo '<div class="bg-danger text-light text-center font-weight-medium">NO TEMPLATE SELECTED</div>';
         get_header();
-        // echo $content;
         get_footer();
-
     }
 
     $full_page_preview = ob_get_clean();
