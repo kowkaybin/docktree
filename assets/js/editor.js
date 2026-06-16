@@ -328,14 +328,15 @@ jQuery(document).ready(function($) {
         setPreviewEditable(activeTab === 'html');
     });
 
-    function hasDocktreeNodes() {
-        return $dtTextarea.val().indexOf('data-dt-type') !== -1;
+    function treeModeAllowed() {
+        var val = $dtTextarea.val().trim();
+        return val === '' || val.indexOf('data-dt-type') !== -1;
     }
 
     function enforceModeForContent() {
-        var hasDt = hasDocktreeNodes();
-        $('.dt-tab-btn[data-tab="tree"], .dt-tab-btn[data-tab="layout"]').toggleClass('dt-tab-disabled', !hasDt);
-        if (!hasDt && activeTab !== 'html') {
+        var allowed = treeModeAllowed();
+        $('.dt-tab-btn[data-tab="tree"], .dt-tab-btn[data-tab="layout"]').toggleClass('dt-tab-disabled', !allowed);
+        if (!allowed && activeTab !== 'html') {
             $('.dt-tab-btn[data-tab="html"]').trigger('click');
         }
     }
