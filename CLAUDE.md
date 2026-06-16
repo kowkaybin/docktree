@@ -41,7 +41,7 @@ docktree.php                  ← plugin entry, REST API routes, WP hooks
 includes/editor-ui.php        ← editor panel HTML markup
 assets/js/editor.js           ← core workspace logic (tree, vDOM, drag/drop, context menu)
 assets/js/widgets.js          ← jQuery UI widget definitions (node editors)
-assets/js/widgets-js          ← component runtime SDK (DocktreeComponent sandbox)
+assets/js/component-runtime.js ← component runtime SDK (DocktreeComponent sandbox)
 assets/css/admin-style.css    ← workspace chrome only (panels, toolbar, tree, bulk bar)
 assets/css/widgets.css        ← all modal and dialog styles
 ```
@@ -50,13 +50,19 @@ assets/css/widgets.css        ← all modal and dialog styles
 
 ## Branch Strategy
 
-- `main` — stable, release-only. Never commit directly.
-- `clauding` — active development branch. All work goes here, PRs to main.
+Single branch — all work goes directly on `main`.
 
 ```bash
 # Start of session
-git checkout clauding && git pull origin clauding
+git checkout main && git pull origin main
 ```
+
+To add a custom post type to the Docktree editor, use the filter in your theme's `functions.php`:
+```php
+add_filter('docktree_post_types', function($types) {
+    $types[] = 'my_custom_type';
+    return $types;
+});
 
 ## Coding Conventions
 
