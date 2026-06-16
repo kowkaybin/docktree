@@ -322,7 +322,10 @@ jQuery(document).ready(function($) {
 
         if (activeTab === 'tree' || activeTab === 'layout') {
             syncTextareaToVisualPanels();
+        } else if (activeTab === 'html') {
+            updateDocktreePreview();
         }
+        setPreviewEditable(activeTab === 'html');
     });
 
     function hasDocktreeNodes() {
@@ -334,6 +337,26 @@ jQuery(document).ready(function($) {
         $('.dt-tab-btn[data-tab="tree"], .dt-tab-btn[data-tab="layout"]').toggleClass('dt-tab-disabled', !hasDt);
         if (!hasDt && activeTab !== 'html') {
             $('.dt-tab-btn[data-tab="html"]').trigger('click');
+        }
+    }
+
+    function setPreviewEditable(enabled) {
+        var iframeWindow = $iframe[0] && $iframe[0].contentWindow;
+        if (!iframeWindow) return;
+        var iframeDoc = iframeWindow.document;
+        var $root = $(iframeDoc).find('#docktree-canvas-root');
+        if (!$root.length) return;
+
+        $root.attr('contenteditable', enabled ? 'true' : 'false');
+        $root.css({ 'outline': enabled ? '1px dashed rgba(16,185,129,0.6)' : '', 'outline-offset': '-1px' });
+
+        $(iframeDoc).off('input.dtEdit');
+        if (enabled) {
+            $(iframeDoc).on('input.dtEdit', '#docktree-canvas-root', function() {
+                var html = $root.html();
+                $dtTextarea.val(html);
+                $wpTextarea.val(html);
+            });
         }
     }
 
@@ -1189,7 +1212,7 @@ jQuery(document).ready(function($) {
     function updateDocktreePreview() {
         const rawHTML = $dtTextarea.val();
         const iframeWindow = $iframe[0].contentWindow;
-        const executeShortcodes = $shortcodeToggle.is(':checked');
+        const executeShortcodes = $shortcodeToggle.is(':checked') && activeTab !== 'html';
 
         if (!iframeWindow) return;
         const iframeDoc = iframeWindow.document;
