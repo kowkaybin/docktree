@@ -298,6 +298,7 @@ jQuery(document).ready(function($) {
         $iframe.attr('src', docktreeData.previewUrl);
         $iframe.on('load', function() {
             updateDocktreePreview();
+            enforceModeForContent();
             $(`.dt-tab-btn[data-tab="${activeTab}"]`).trigger('click');
         });
     }
@@ -310,6 +311,7 @@ jQuery(document).ready(function($) {
 
     $('.dt-tab-btn').on('click', function(e) {
         e.preventDefault();
+        if ($(this).hasClass('dt-tab-disabled')) return;
         $('.dt-tab-btn').removeClass('active');
         $(this).addClass('active');
         activeTab = $(this).data('tab');
@@ -324,8 +326,21 @@ jQuery(document).ready(function($) {
         }
     });
 
+    function hasDocktreeNodes() {
+        return $dtTextarea.val().indexOf('data-dt-type') !== -1;
+    }
+
+    function enforceModeForContent() {
+        var hasDt = hasDocktreeNodes();
+        $('.dt-tab-btn[data-tab="tree"], .dt-tab-btn[data-tab="layout"]').toggleClass('dt-tab-disabled', !hasDt);
+        if (!hasDt && activeTab !== 'html') {
+            $('.dt-tab-btn[data-tab="html"]').trigger('click');
+        }
+    }
+
     $dtTextarea.on('input propertychange change', function() {
         $wpTextarea.val($(this).val());
+        enforceModeForContent();
     });
 
     $refreshBtn.on('click', function(e) {

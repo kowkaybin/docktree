@@ -102,6 +102,12 @@
     box-shadow: 0 1px 3px rgba(0,0,0,0.1);
 }
 
+.dt-tab-btn.dt-tab-disabled {
+    opacity: 0.35;
+    cursor: not-allowed;
+}
+}
+
 .dt-tab-content-wrapper {
     flex: 1;
     display: flex;
