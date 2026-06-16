@@ -1,8 +1,11 @@
 <?php
 if (!defined('ABSPATH')) exit;
+
+get_header();
 ?>
 
 <div id="docktree-canvas-wrapper" class="site-main" style="min-height: 55vh; background: rgba(0,0,0,0.01); position: relative;">
+    <div id="docktree-canvas-root" class="container"></div>
 </div>
 
 <script>
@@ -20,3 +23,5 @@ if (!defined('ABSPATH')) exit;
     }
 })();
 </script>
+
+<?php get_footer(); ?>
