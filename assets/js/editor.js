@@ -29,6 +29,7 @@ jQuery(document).ready(function($) {
     let clipboardStyle = null;
     let selectedNodes = new Set();
     let contextNodeId = '';
+    var selSyncTimer = null;
 
     window.dtModalAnimClass = '';
     const $editorTargetEl = $('#dt-universal-editor-dialog');
@@ -351,12 +352,29 @@ jQuery(document).ready(function($) {
         $root.attr('contenteditable', enabled ? 'true' : 'false');
         $root.css({ 'outline': enabled ? '1px dashed rgba(16,185,129,0.6)' : '', 'outline-offset': '-1px' });
 
-        $(iframeDoc).off('input.dtEdit');
+        $(iframeDoc).off('input.dtEdit selectionchange.dtSync');
         if (enabled) {
             $(iframeDoc).on('input.dtEdit', '#docktree-canvas-root', function() {
                 var html = $root.html();
                 $dtTextarea.val(html);
                 $wpTextarea.val(html);
+            });
+
+            $(iframeDoc).on('selectionchange.dtSync', function() {
+                clearTimeout(selSyncTimer);
+                selSyncTimer = setTimeout(function() {
+                    var sel = iframeWindow.getSelection();
+                    var text = sel ? sel.toString() : '';
+                    if (!text) return;
+                    var source = $dtTextarea.val();
+                    var idx = source.indexOf(text);
+                    if (idx === -1) return;
+                    var before = source.substring(0, idx);
+                    var linesBefore = (before.match(/\n/g) || []).length;
+                    var lineHeight = $dtTextarea[0].scrollHeight / Math.max(1, source.split('\n').length);
+                    $dtTextarea[0].scrollTop = Math.max(0, (linesBefore - 2) * lineHeight);
+                    $dtTextarea[0].setSelectionRange(idx, idx + text.length);
+                }, 80);
             });
         }
     }
