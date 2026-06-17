@@ -370,13 +370,13 @@ jQuery(document).ready(function($) {
         return widget;
     }
 
-    function dtTagCol(colEl) {
+    function dtTagCol(colEl, depth) {
         colEl.setAttribute('data-dt-type', 'column');
         colEl.setAttribute('data-dt-id', 'dt-node-' + (nodeCounter++));
         var childEls = Array.from(colEl.children);
         var hasNestedRow = childEls.some(dtIsRow);
-        if (hasNestedRow) {
-            dtConvertContainer(colEl);
+        if (hasNestedRow && depth < 20) {
+            dtConvertContainer(colEl, depth + 1);
         } else if (colEl.innerHTML.trim()) {
             var inner = colEl.innerHTML;
             colEl.innerHTML = '';
@@ -384,15 +384,15 @@ jQuery(document).ready(function($) {
         }
     }
 
-    function dtTagRow(rowEl) {
+    function dtTagRow(rowEl, depth) {
         rowEl.setAttribute('data-dt-type', 'row');
         rowEl.setAttribute('data-dt-id', 'dt-node-' + (nodeCounter++));
         Array.from(rowEl.children).forEach(function(child) {
-            if (dtIsCol(child)) dtTagCol(child);
+            if (dtIsCol(child)) dtTagCol(child, depth);
         });
     }
 
-    function dtConvertContainer(container) {
+    function dtConvertContainer(container, depth) {
         var children = Array.from(container.children);
         var pending = [];
 
@@ -428,7 +428,7 @@ jQuery(document).ready(function($) {
         children.forEach(function(child) {
             if (dtIsRow(child)) {
                 flushPending(child);
-                dtTagRow(child);
+                dtTagRow(child, depth);
             } else {
                 pending.push(child);
             }
@@ -441,7 +441,7 @@ jQuery(document).ready(function($) {
         if (!html) return;
         var temp = document.createElement('div');
         temp.innerHTML = html;
-        dtConvertContainer(temp);
+        dtConvertContainer(temp, 0);
         var result = temp.innerHTML;
         $dtTextarea.val(result);
         $wpTextarea.val(result);
