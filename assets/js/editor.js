@@ -392,6 +392,58 @@ jQuery(document).ready(function($) {
         });
     }
 
+    // ==========================================
+    // HTML BEAUTIFIER
+    // ==========================================
+    var DT_INLINE_TAGS = { a:1,abbr:1,b:1,bdi:1,bdo:1,br:1,cite:1,code:1,data:1,dfn:1,em:1,i:1,kbd:1,mark:1,q:1,s:1,samp:1,small:1,span:1,strong:1,sub:1,sup:1,time:1,u:1,'var':1,wbr:1 };
+    var DT_VOID_TAGS  = { area:1,base:1,br:1,col:1,embed:1,hr:1,img:1,input:1,link:1,meta:1,param:1,source:1,track:1,wbr:1 };
+    var DT_RAW_TAGS   = { pre:1,script:1,style:1,textarea:1 };
+
+    function dtSerializeNode(node, depth) {
+        var pad = '    '.repeat(depth);
+        var out = '';
+        Array.from(node.childNodes).forEach(function(child) {
+            if (child.nodeType === 3) {
+                var text = child.textContent.trim();
+                if (text) out += pad + text + '\n';
+            } else if (child.nodeType === 1) {
+                var tag = child.tagName.toLowerCase();
+                var attrs = Array.from(child.attributes).reduce(function(s, a) {
+                    return s + ' ' + a.name + '="' + a.value + '"';
+                }, '');
+                if (DT_VOID_TAGS[tag]) {
+                    out += pad + '<' + tag + attrs + '>\n';
+                    return;
+                }
+                if (DT_RAW_TAGS[tag]) {
+                    out += pad + child.outerHTML + '\n';
+                    return;
+                }
+                var inlineOnly = Array.from(child.childNodes).every(function(n) {
+                    return n.nodeType === 3 || (n.nodeType === 1 && DT_INLINE_TAGS[n.tagName.toLowerCase()]);
+                });
+                if (inlineOnly) {
+                    out += pad + '<' + tag + attrs + '>' + child.innerHTML + '</' + tag + '>\n';
+                } else {
+                    out += pad + '<' + tag + attrs + '>\n';
+                    out += dtSerializeNode(child, depth + 1);
+                    out += pad + '</' + tag + '>\n';
+                }
+            }
+        });
+        return out;
+    }
+
+    $('#dt-beautify-btn').on('click', function() {
+        var html = $dtTextarea.val().trim();
+        if (!html) return;
+        var temp = document.createElement('div');
+        temp.innerHTML = html;
+        var result = dtSerializeNode(temp, 0).trim();
+        $dtTextarea.val(result);
+        $wpTextarea.val(result);
+    });
+
     function hasMeaningfulClasses(el) {
         var classes = Array.from(el.classList);
         if (!classes.length) return false;

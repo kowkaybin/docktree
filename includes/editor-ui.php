@@ -54,6 +54,9 @@ if (!defined('ABSPATH')) exit;
                         <button type="button" class="button button-small" id="dt-insert-image-btn">
                             <span class="dashicons dashicons-format-image"></span> Insert Image
                         </button>
+                        <button type="button" class="button button-small" id="dt-beautify-btn">
+                            <span class="dashicons dashicons-editor-code"></span> Beautify
+                        </button>
                         <button type="button" class="button button-small" id="dt-convert-btn" style="display:none;">
                             <span class="dashicons dashicons-randomize"></span> Convert to Tree Mode
                         </button>
