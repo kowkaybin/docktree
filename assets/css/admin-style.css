@@ -162,6 +162,8 @@
     border: 1px solid #cbd5e1;
     border-radius: 4px;
     padding: 12px;
+    white-space: pre;
+    overflow-x: auto;
     color: #0f172a;
     background: #f8fafc;
 }

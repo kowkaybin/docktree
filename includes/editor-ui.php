@@ -51,17 +51,17 @@ if (!defined('ABSPATH')) exit;
                 <!-- Tab 1: HTML Raw View -->
                 <div class="dt-tab-view" id="dt-view-html">
                     <div class="dt-html-toolbar">
-                        <button type="button" class="button button-small" id="dt-insert-image-btn">
-                            <span class="dashicons dashicons-format-image"></span> Insert Image
+                        <button type="button" class="button button-small" id="dt-insert-image-btn" title="Insert Image">
+                            <span class="dashicons dashicons-format-image"></span>
                         </button>
-                        <button type="button" class="button button-small" id="dt-beautify-btn">
-                            <span class="dashicons dashicons-editor-code"></span> Beautify
+                        <button type="button" class="button button-small" id="dt-beautify-btn" title="Beautify HTML">
+                            <span class="dashicons dashicons-editor-code"></span>
                         </button>
-                        <button type="button" class="button button-small" id="dt-convert-btn" style="display:none;">
-                            <span class="dashicons dashicons-randomize"></span> Convert to Tree Mode
+                        <button type="button" class="button button-small" id="dt-convert-btn" style="display:none;" title="Convert to Tree Mode">
+                            <span class="dashicons dashicons-randomize"></span>
                         </button>
                     </div>
-                    <textarea name="docktree-shadow-textarea" id="docktree-shadow-textarea" rows="25" placeholder="Type Bootstrap HTML or structures here..."></textarea>
+                    <textarea name="docktree-shadow-textarea" id="docktree-shadow-textarea" rows="25" placeholder="Type Bootstrap HTML or structures here..." wrap="off"></textarea>
                 </div>
 
                 <!-- Tab 2: Nestable Tree View -->
