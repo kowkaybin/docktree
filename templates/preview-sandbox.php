@@ -2,10 +2,16 @@
 if (!defined('ABSPATH')) exit;
 
 get_header();
+
+$canvas_html = apply_filters(
+    'docktree_preview_canvas',
+    '<div id="docktree-canvas-root" class="container"></div>',
+    get_post_type()
+);
 ?>
 
 <div id="docktree-canvas-wrapper" class="site-main" style="min-height: 55vh; position: relative;">
-    <div id="docktree-canvas-root" class="container"></div>
+    <?php echo $canvas_html; ?>
 </div>
 
 <script>
