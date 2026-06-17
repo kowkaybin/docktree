@@ -340,7 +340,115 @@ jQuery(document).ready(function($) {
         if (!allowed && activeTab !== 'html') {
             $('.dt-tab-btn[data-tab="html"]').trigger('click');
         }
+        var val = $dtTextarea.val().trim();
+        $('#dt-convert-btn').toggle(val !== '' && val.indexOf('data-dt-type') === -1);
     }
+
+    // ==========================================
+    // HTML → DOCKTREE TREE CONVERSION
+    // ==========================================
+    function dtIsRow(el) {
+        return el.nodeType === 1 && el.classList.contains('row');
+    }
+
+    function dtIsCol(el) {
+        if (el.nodeType !== 1) return false;
+        return Array.from(el.classList).some(function(c) { return c === 'col' || /^col-/.test(c); });
+    }
+
+    function dtMakeWidget(content) {
+        var widgetId = 'dt-node-' + (nodeCounter++);
+        var widget = document.createElement('div');
+        widget.className = 'dt-widget';
+        widget.setAttribute('data-dt-type', 'widget');
+        widget.setAttribute('data-dt-widget', 'text');
+        widget.setAttribute('data-dt-id', widgetId);
+        var render = document.createElement('div');
+        render.className = 'dt-widget-render';
+        render.innerHTML = content;
+        widget.appendChild(render);
+        return widget;
+    }
+
+    function dtTagCol(colEl) {
+        colEl.setAttribute('data-dt-type', 'column');
+        colEl.setAttribute('data-dt-id', 'dt-node-' + (nodeCounter++));
+        var childEls = Array.from(colEl.children);
+        var hasNestedRow = childEls.some(dtIsRow);
+        if (hasNestedRow) {
+            dtConvertContainer(colEl);
+        } else if (colEl.innerHTML.trim()) {
+            var inner = colEl.innerHTML;
+            colEl.innerHTML = '';
+            colEl.appendChild(dtMakeWidget(inner));
+        }
+    }
+
+    function dtTagRow(rowEl) {
+        rowEl.setAttribute('data-dt-type', 'row');
+        rowEl.setAttribute('data-dt-id', 'dt-node-' + (nodeCounter++));
+        Array.from(rowEl.children).forEach(function(child) {
+            if (dtIsCol(child)) dtTagCol(child);
+        });
+    }
+
+    function dtConvertContainer(container) {
+        var children = Array.from(container.children);
+        var pending = [];
+
+        function flushPending(beforeNode) {
+            if (!pending.length) return;
+            var row = document.createElement('div');
+            row.className = 'row g-3';
+            row.setAttribute('data-dt-type', 'row');
+            row.setAttribute('data-dt-id', 'dt-node-' + (nodeCounter++));
+            var col = document.createElement('div');
+            col.className = 'col-md-12';
+            col.setAttribute('data-dt-type', 'column');
+            col.setAttribute('data-dt-id', 'dt-node-' + (nodeCounter++));
+            var render = document.createElement('div');
+            render.className = 'dt-widget-render';
+            pending.forEach(function(el) { render.appendChild(el); });
+            var widget = document.createElement('div');
+            widget.className = 'dt-widget';
+            widget.setAttribute('data-dt-type', 'widget');
+            widget.setAttribute('data-dt-widget', 'text');
+            widget.setAttribute('data-dt-id', 'dt-node-' + (nodeCounter++));
+            widget.appendChild(render);
+            col.appendChild(widget);
+            row.appendChild(col);
+            if (beforeNode && beforeNode.parentNode === container) {
+                container.insertBefore(row, beforeNode);
+            } else {
+                container.appendChild(row);
+            }
+            pending = [];
+        }
+
+        children.forEach(function(child) {
+            if (dtIsRow(child)) {
+                flushPending(child);
+                dtTagRow(child);
+            } else {
+                pending.push(child);
+            }
+        });
+        flushPending(null);
+    }
+
+    $('#dt-convert-btn').on('click', function() {
+        var html = $dtTextarea.val().trim();
+        if (!html) return;
+        var temp = document.createElement('div');
+        temp.innerHTML = html;
+        dtConvertContainer(temp);
+        var result = temp.innerHTML;
+        $dtTextarea.val(result);
+        $wpTextarea.val(result);
+        enforceModeForContent();
+        updateDocktreePreview();
+        $('.dt-tab-btn[data-tab="tree"]').trigger('click');
+    });
 
     function setPreviewEditable(enabled) {
         var iframeWindow = $iframe[0] && $iframe[0].contentWindow;

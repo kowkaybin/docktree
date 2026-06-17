@@ -54,6 +54,9 @@ if (!defined('ABSPATH')) exit;
                         <button type="button" class="button button-small" id="dt-insert-image-btn">
                             <span class="dashicons dashicons-format-image"></span> Insert Image
                         </button>
+                        <button type="button" class="button button-small" id="dt-convert-btn" style="display:none;">
+                            <span class="dashicons dashicons-randomize"></span> Convert to Tree Mode
+                        </button>
                     </div>
                     <textarea name="docktree-shadow-textarea" id="docktree-shadow-textarea" rows="25" placeholder="Type Bootstrap HTML or structures here..."></textarea>
                 </div>
