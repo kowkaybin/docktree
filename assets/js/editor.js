@@ -392,6 +392,45 @@ jQuery(document).ready(function($) {
         });
     }
 
+    function hasMeaningfulClasses(el) {
+        var classes = Array.from(el.classList);
+        if (!classes.length) return false;
+        var meaningful = /^(row$|col(-|$)|container(-|$)|bg-|text-|p[xytblrse]?-|m[xytblrse]?-|d-|flex-|justify-|align-|gap-|g[xy]?-|w-|h-|fw-|fs-|lh-|border|rounded|shadow|opacity-|overflow-|position-|float-|order-|offset-)/;
+        return classes.some(function(c) { return meaningful.test(c); });
+    }
+
+    function shouldUnwrap(el) {
+        if (el.tagName !== 'DIV') return false;
+        if (dtIsRow(el) || dtIsCol(el)) return false;
+        if (el.getAttribute('style')) return false;
+        if (hasMeaningfulClasses(el)) return false;
+        if (Array.from(el.children).length !== 1) return false;
+        var hasTextContent = Array.from(el.childNodes).some(function(node) {
+            return node.nodeType === 3 && node.textContent.trim() !== '';
+        });
+        return !hasTextContent;
+    }
+
+    function dtFlattenWrappers(container, depth) {
+        if (depth > 50) return;
+        Array.from(container.children).forEach(function(child) {
+            dtFlattenWrappers(child, depth + 1);
+        });
+        var changed = true;
+        while (changed) {
+            changed = false;
+            Array.from(container.children).forEach(function(child) {
+                if (shouldUnwrap(child)) {
+                    Array.from(child.childNodes).forEach(function(node) {
+                        container.insertBefore(node, child);
+                    });
+                    container.removeChild(child);
+                    changed = true;
+                }
+            });
+        }
+    }
+
     function dtConvertContainer(container, depth) {
         var children = Array.from(container.children);
         var pending = [];
@@ -441,6 +480,7 @@ jQuery(document).ready(function($) {
         if (!html) return;
         var temp = document.createElement('div');
         temp.innerHTML = html;
+        dtFlattenWrappers(temp, 0);
         dtConvertContainer(temp, 0);
         var result = temp.innerHTML;
         $dtTextarea.val(result);
