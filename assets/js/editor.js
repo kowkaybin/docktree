@@ -552,7 +552,7 @@ jQuery(document).ready(function($) {
         $root.attr('contenteditable', enabled ? 'true' : 'false');
         $root.css({ 'outline': enabled ? '1px dashed rgba(16,185,129,0.6)' : '', 'outline-offset': '-1px' });
 
-        $(iframeDoc).off('input.dtEdit selectionchange.dtSync');
+        $(iframeDoc).off('input.dtEdit dblclick.dtSync');
         if (enabled) {
             $(iframeDoc).on('input.dtEdit', '#docktree-canvas-root', function() {
                 var html = $root.html();
@@ -560,7 +560,7 @@ jQuery(document).ready(function($) {
                 $wpTextarea.val(html);
             });
 
-            $(iframeDoc).on('selectionchange.dtSync', function() {
+            $(iframeDoc).on('dblclick.dtSync', '#docktree-canvas-root', function() {
                 clearTimeout(selSyncTimer);
                 selSyncTimer = setTimeout(function() {
                     var sel = iframeWindow.getSelection();
@@ -574,7 +574,8 @@ jQuery(document).ready(function($) {
                     var lineHeight = $dtTextarea[0].scrollHeight / Math.max(1, source.split('\n').length);
                     $dtTextarea[0].scrollTop = Math.max(0, (linesBefore - 2) * lineHeight);
                     $dtTextarea[0].setSelectionRange(idx, idx + text.length);
-                }, 80);
+                    $dtTextarea[0].focus();
+                }, 10);
             });
         }
     }
