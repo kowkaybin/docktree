@@ -26,6 +26,10 @@
   line-height: 1.35em;
 }
 
+.docktree-toolbar .button.button-primary .dashicons.dashicons-update {
+  line-height: 1.95em;
+}
+
 .dt-toggle-label {
     display: flex;
     align-items: center;
